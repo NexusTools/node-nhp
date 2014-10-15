@@ -1,0 +1,44 @@
+{
+	"name": "nhp",
+	"author": "NexusTools",
+	"homepage": "https://www.nexustools.net/projects#nhp",
+	"description": "node-nhp is a html templating language which uses tags similar to php, but a javascript like language syntax.",
+	"version": "0.1.1",
+	"licenses": [
+		{
+			"type": "Apache License 2.0", 
+			"url": "https://github.com/NexusTools/node-nhp/blob/master/LICENSE.md"
+		}
+	],
+	"description": "",
+	"keywords": [
+		"php",
+		"html",
+		"nosejs",
+		"template",
+		"NexusTools",
+		"integration",
+		"compiler",
+		"language"
+	],
+	"bugs": {
+		"url" : "https://github.com/NexusTools/node-nhp/issues"
+	},
+	"repository" : {
+		"type" : "git",
+		"url" : "https://github.com/NexusTools/node-nhp.git"
+	},
+	"preferGlobal" : true,
+	"main" : "index",
+	"bin" : {
+		"nhpc" : "./bin/nhpc" 
+	},
+	"engines" : {
+		"node" : ">=0.8.0"
+	},
+	"dependencies": {
+		"node-expat": "latest",
+		"typeinclude": "latest",
+		"yargs": "latest"
+	}
+}
