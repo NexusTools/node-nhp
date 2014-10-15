@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/NexusTools/node-nhp.svg)](https://travis-ci.org/NexusTools/node-nhp) [![Apache License 2.0](http://img.shields.io/hexpm/l/plug.svg)](https://coveralls.io/r/NexusTools/node-typeinclude) [![Coverage Status](https://img.shields.io/coveralls/NexusTools/node-nhp.svg)](https://coveralls.io/r/NexusTools/node-nhp) [![Gratipay Tips](http://img.shields.io/gratipay/ktaeyln.svg)](https://gratipay.com/ktaeyln/)
+[![Package Version](https://img.shields.io/npm/v/nhp.svg)](https://www.npmjs.org/package/nhp) [![Build Status](https://travis-ci.org/NexusTools/node-nhp.svg)](https://travis-ci.org/NexusTools/node-nhp) [![Apache License 2.0](http://img.shields.io/hexpm/l/plug.svg)](https://coveralls.io/r/NexusTools/node-typeinclude) [![Coverage Status](https://img.shields.io/coveralls/NexusTools/node-nhp.svg)](https://coveralls.io/r/NexusTools/node-nhp) [![Gratipay Tips](http://img.shields.io/gratipay/NexusTools.svg)](https://gratipay.com/NexusTools/)
 
 node-nhp
 --------

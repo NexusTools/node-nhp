@@ -1,5 +1,5 @@
-import expat = require("node-expat");
-import fs = require("fs");
+@nodereq node-expat:expat
+@nodereq fs
 
 class NHP {
     private globals:Object = {};
