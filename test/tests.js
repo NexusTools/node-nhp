@@ -4,17 +4,23 @@ var assertions = require('mocha').assertions
 var path = require('path')
 var assert = require('assert')
 
-describe('api', function() {
-	var nhp;
-    it('include index.js', function() { // added "done" as parameter
-        nhp = require(path.dirname(__dirname) + path.sep + "index");
-    });
+var nhp;
+it('include index.js', function() { // added "done" as parameter
+    nhp = require(path.dirname(__dirname) + path.sep + "index");
+    nhp = new nhp();
+});
+describe('Compiler', function() {
+
     it('compile simple test', function(done) {
-    	nhp.compile("test", function(error) {
+    	nhp.compile(__dirname + path.sep + "test.nhp", function(error) {
     		if(error)
     			throw error;
     		
     		done();
     	});
+    });
+});
+describe('Template', function() {
+    it('run compiled template', function() {
     });
 });

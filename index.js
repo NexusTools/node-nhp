@@ -1,2 +1,2 @@
 var path = require("path");
-module.exports = require("typeinclude")(__dirname + path.sep + "index.ts");
+module.exports = require("typeinclude")("NHP", __dirname + path.sep + "src");

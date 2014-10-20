@@ -2,15 +2,14 @@
 	"name": "nhp",
 	"author": "NexusTools",
 	"homepage": "https://www.nexustools.net/projects#nhp",
-	"description": "node-nhp is a html templating language which uses tags similar to php, but a javascript like language syntax.",
-	"version": "0.1.1",
+	"version": "0.1.2",
 	"licenses": [
 		{
 			"type": "Apache License 2.0", 
 			"url": "https://github.com/NexusTools/node-nhp/blob/master/LICENSE.md"
 		}
 	],
-	"description": "",
+	"description": "node-nhp is a html templating language which uses tags similar to php, but a javascript like language syntax.",
 	"keywords": [
 		"php",
 		"html",
@@ -29,8 +28,9 @@
 		"url" : "https://github.com/NexusTools/node-nhp.git"
 	},
 	"scripts": {
-		"test": "mocha --require test/support/env --reporter spec --check-leaks test/",
-		"test-travis": "istanbul cover node_modules/mocha/bin/_mocha --report lcovonly -- --require test/support/env --reporter spec --check-leaks test/"
+		"test": "mocha --require test/support/env --reporter spec test/",
+		"test-travis": "istanbul cover node_modules/mocha/bin/_mocha --report lcovonly -- --require test/support/env --reporter spec test/",
+        "postinstall": "tscac src"
 	},
 	"preferGlobal" : true,
 	"main" : "index",
@@ -41,7 +41,7 @@
 		"node" : ">=1.0.0"
 	},
 	"dependencies": {
-		"node-expat": "latest",
+		"htmlparser2": "latest",
 		"typeinclude": "latest",
 		"yargs": "latest"
 	}
