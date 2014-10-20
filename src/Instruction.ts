@@ -1,3 +1,5 @@
+@noautocompile
+
 enum Instruction {
     WRITEDATA,
     WRITECODE,

@@ -17,7 +17,7 @@ class Compiler {
     }
     
     public compile(source, callback) {
-        callback();
+        
     }
     
     public writeString(data) {
