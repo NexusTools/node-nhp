@@ -41,11 +41,10 @@
 		"node" : ">=1.0.0"
 	},
 	"dependencies": {
-        "bson": "latest",
-		"typescript": "latest",
 		"htmlparser2": "latest",
 		"typeinclude": "latest",
-		"yargs": "latest"
+		"yargs": "latest",
+        "bson": "latest"
 	},
 	"devDependencies": {
 		"istanbul": "0.3.2",
