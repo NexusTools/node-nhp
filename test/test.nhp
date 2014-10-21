@@ -1,8 +1,8 @@
-<html><head><title>{{PageModule.title}}</title></head>
-<body><h1>{{PageModule.title}}</h1>
-<?if Platform.isWeb?>
+<html><head><title>{{title}}</title></head>
+<body><h1>{{title}}</h1>
+<?if isWeb?>
     <p>You're on the Web!</p>
-<?if Platform.isMobile?>
+<?if isMobile?>
     <p>You're on a mobile device like Android or iOS!</p>
 <?else?>
     <p>You're on something else!</p>
