@@ -1,10 +1,1 @@
-<html><head><title>{{title}}</title></head>
-<body><h1>{{title}}</h1>
-<?if isWeb?>
-    <p>You're on the Web!</p>
-<?if isMobile?>
-    <p>You're on a mobile device like Android or iOS!</p>
-<?else?>
-    <p>You're on something else!</p>
-<?endif?>
-</body></html>
+<html><head><title>{{title}}</title></head></html>

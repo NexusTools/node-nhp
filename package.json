@@ -44,5 +44,9 @@
 		"htmlparser2": "latest",
 		"typeinclude": "latest",
 		"yargs": "latest"
+	},
+	"devDependencies": {
+		"istanbul": "0.3.2",
+    	"mocha": "~1.21.4"
 	}
 }

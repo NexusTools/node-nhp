@@ -20,7 +20,6 @@ class Compiler {
     }
     
     public compile(source, output, callback:Function) {
-        console.log(Instruction);
         output = output || process.stdout;
         try {
             if(!("write" in output))
