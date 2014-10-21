@@ -2,7 +2,7 @@
 	"name": "nhp",
 	"author": "NexusTools",
 	"homepage": "https://www.nexustools.net/projects#nhp",
-	"version": "0.1.2",
+	"version": "0.1.3",
 	"licenses": [
 		{
 			"type": "Apache License 2.0", 
@@ -28,8 +28,8 @@
 		"url" : "https://github.com/NexusTools/node-nhp.git"
 	},
 	"scripts": {
-		"test": "mocha --timeout 10000 --require test/support/env --reporter spec --globals __typeinclude__,_test --check-leaks test/",
-		"test-travis": "istanbul cover node_modules/mocha/bin/_mocha --report lcovonly --  --timeout 20000 --require test/support/env --reporter spec --globals __typeinclude__,_test --check-leaks test/",
+		"test": "mocha --timeout 10000 --require test/support/env --reporter spec --globals __typeinclude__ --check-leaks test/",
+		"test-travis": "istanbul cover node_modules/mocha/bin/_mocha --report lcovonly --  --timeout 20000 --require test/support/env --reporter spec --globals __typeinclude__ --check-leaks test/",
         "postinstall": "tscac src"
 	},
 	"main" : "index",
@@ -40,10 +40,8 @@
 		"node" : ">=1.0.0"
 	},
 	"dependencies": {
-		"typeinclude": "latest",
 		"htmlparser2": "latest",
-		"yargs": "latest",
-        "bson": "latest"
+		"typeinclude": "latest"
 	},
 	"devDependencies": {
 		"istanbul": "0.3.2",
