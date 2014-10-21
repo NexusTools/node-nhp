@@ -65,13 +65,13 @@ class NHP {
         });
     }
     
-    public compile(source, output, callback:Function) {
+    public compile(source, callback:Function) {
         var compiler = this.createCompiler();
-        compiler.compile(source, output, callback);
-        return compiler.template;
+        compiler.compile(source, callback);
+        return compiler;
     }
     
-    public createCode(source:string):Code {
+    public processCode(source:string):Code {
         var code = new Code(this);
         if(source)
             code.process(source);

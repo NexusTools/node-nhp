@@ -45,17 +45,24 @@ describe('Code', function() {
 var compiledTemplate;
 describe('Compile', function() {
     it('compile test', function(done) {
-    	compiledTemplate = nhp.compile(
+        var compiler;
+    	compiler = nhp.compile(
                 __dirname + path.sep +
                 "test.nhp", function(error) {
     		if(error)
     			throw error;
     		
+            compiledTemplate = compiler.template;
     		done();
     	});
     });
 });
 describe('Template', function() {
-    it('run compiled template', function() {
+    it('run compiled template', function(done) {
+        console.log(__dirname + path.sep + "test.html");
+        compiledTemplate.run(__dirname + path.sep + "test.html", {
+            platform: "nodejs",
+            title: "Test"
+        }, done);
     });
 });

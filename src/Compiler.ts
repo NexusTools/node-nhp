@@ -1,6 +1,8 @@
-@include Instruction
 @nodereq htmlparser2
 @nodereq fs
+
+@include Instruction
+@include Template;
 
 @target ES5
 
@@ -68,7 +70,7 @@ class Compiler {
                             value.substring(0, match.index)]);
                     
                     sourceParts.push([Instruction.WRITECODE,
-                            thisCompiler.nhp.createCode(match[1])]);
+                            thisCompiler.nhp.processCode(match[1])]);
                     
                     var end = match.index + match[0].length;
                     if(end < match[0].length)
@@ -85,6 +87,8 @@ class Compiler {
         }
         var parser = new htmlparser2.Parser({
             onopentag: function(name, attribs){
+                thisCompiler._path.push(name);
+                
                 sourceParts.push([Instruction.WRITE, "<" + name]);
                 for(var key in attribs) {
                     sourceParts.push([Instruction.WRITE, " " + key + "=\""]);
@@ -92,8 +96,6 @@ class Compiler {
                     sourceParts.push([Instruction.WRITE, "\""]);
                 }
                 sourceParts.push([Instruction.WRITE, ">"]);
-                
-                thisCompiler._path.push(name);
             },
             ontext: function(text){
                 processValue(text);
@@ -113,7 +115,7 @@ class Compiler {
             onend: function() {
                 thisCompiler._compiled = sourceParts;
                 thisCompiler.optimize();
-                console.dir(thisCompiler._compiled);
+                console.log(JSON.stringify(thisCompiler._compiled));
                 callback();
             }
         });
@@ -124,7 +126,7 @@ class Compiler {
         var i;
         var cStart = -1;
         var cBuffer = "";
-        console.log("Optimizing", this._compiled);
+        console.log("Optimizing", JSON.stringify(this._compiled));
         for(i=0; i<this._compiled.length; i++) {
             var op = this._compiled[i];
             if(op[0] == Instruction.WRITE) {
@@ -158,6 +160,10 @@ class Compiler {
             }
             cBuffer = "";
         }
+    }
+    
+    get template():Template {
+        return new Template(this.nhp, this._compiled);
     }
     
 }
