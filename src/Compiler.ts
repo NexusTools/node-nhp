@@ -1,12 +1,5 @@
-@nodereq path
+@nodereq htmlparser2
 @nodereq fs
-
-var htmlparser2:any;
-try {
-    htmlparser2 = require("htmlparser2");
-} catch(e) {
-    htmlparser2 = require(path.dirname(__dirname) + path.sep + "node_modules" + path.sep + "htmlparser2" + path.sep + "lib" + path.sep + "index.js");
-}
 
 @include Instruction
 @include Template;

@@ -1,2 +1,4 @@
 var path = require("path");
-module.exports = require("typeinclude")("NHP", __dirname + path.sep + "src");
+var typeinclude = require("typeinclude");
+typeinclude.addclasspath(__dirname + path.sep + "node_modules");
+module.exports = typeinclude("NHP", __dirname + path.sep + "src");
