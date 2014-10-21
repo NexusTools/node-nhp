@@ -6,10 +6,15 @@
 
 class Compiler {
     private nhp;
+    private static $break = new Object();
     
-    private blocks = [];
-    private silence = false;
+    private _compiled:Array<Array>;
     private _path:Array<String> = [];
+    private processors:Array<Array> = []
+    
+    public registerProcessor(pattern, handler) {
+        this.processors.push([pattern, handler]);
+    }
     
     get path():string {
         return this._path;
@@ -19,14 +24,7 @@ class Compiler {
         this.nhp = nhp;
     }
     
-    public compile(source, output, callback:Function) {
-        output = output || process.stdout;
-        try {
-            if(!("write" in output))
-                throw "No write method";
-        } catch(e) {
-            output = fs.createWriteStream(output);
-        }
+    public compile(source, callback:Function) {
         try {
             if(!("pipe" in source))
                 throw "Not a stream";
@@ -34,33 +32,132 @@ class Compiler {
             source = fs.createReadStream(source);
         }
         
+        var sourceParts = [];
         var thisCompiler:Compiler = this;
+        var processors = this.processors.slice(0);
+        this.nhp.applyProcessors(processors);
+        console.log(processors);
+        var processValue = function(value:string) {
+            while(value.length > 0) {
+                var match;
+                var processor;
+                try {
+                    processors.forEach(function(proc) {
+                        match = value.match(proc[0]);
+                        console.log(value, match);
+                        if(!match)
+                            throw "Bad match";
+                        processor = proc[1];
+                        throw Compiler.$break;
+                    });
+                } catch(e) {
+                    if(e != Compiler.$break) {
+                        console.error(e);
+                        throw e;
+                    }
+                }
+
+                if(match) {
+                    console.log(match);
+                    
+                    if(match.index > 0)
+                        sourceParts.push([Instruction.WRITE,
+                            value.substring(0, match.index)]);
+                    
+                    sourceParts.push([Instruction.WRITE,
+                            value.substring(0, match.index)]);
+                    
+                    sourceParts.push([Instruction.WRITECODE,
+                            thisCompiler.nhp.createCode(match[1])]);
+                    
+                    var end = match.index + match[0].length;
+                    if(end < match[0].length)
+                        sourceParts.push([Instruction.WRITE,
+                            match[0].substring(end)]);
+                    
+                    value = value.substring(end);
+                } else {
+                    sourceParts.push([Instruction.WRITE, value]);
+                    return;
+                }
+                
+            }
+        }
         var parser = new htmlparser2.Parser({
             onopentag: function(name, attribs){
-                output.write("<" + name + " " + attribs + "\n");
+                sourceParts.push([Instruction.WRITE, "<" + name]);
+                for(var key in attribs) {
+                    sourceParts.push([Instruction.WRITE, " " + key + "=\""]);
+                    processValue(attribs[key]);
+                    sourceParts.push([Instruction.WRITE, "\""]);
+                }
+                sourceParts.push([Instruction.WRITE, ">"]);
+                
                 thisCompiler._path.push(name);
             },
             ontext: function(text){
-                output.write("--> " + text + "\n");
+                processValue(text);
             },
             onclosetag: function(name){
-                output.write("</ " + name + "\n");
                 if(thisCompiler._path.pop() != name)
-                    throw new Error("Unexpected endtag: " + name);
+                   throw new Error("Unexpected endtag: " + name);
+                sourceParts.push([Instruction.WRITE, "</" + name + ">"]);
             },
             onprocessinginstruction: function(name, data) {
-                output.write(name + " " + data + "\n");
             },
             oncdatastart: function() {
-                output.write("Enter CDATA");
             },
             oncdataend: function() {
-                output.write("Leave CDATA");
             },
             onerror: callback,
-            onend: callback
+            onend: function() {
+                thisCompiler._compiled = sourceParts;
+                thisCompiler.optimize();
+                console.dir(thisCompiler._compiled);
+                callback();
+            }
         });
         source.pipe(parser);
+    }
+    
+    private optimize():void {
+        var i;
+        var cStart = -1;
+        var cBuffer = "";
+        console.log("Optimizing", this._compiled);
+        for(i=0; i<this._compiled.length; i++) {
+            var op = this._compiled[i];
+            if(op[0] == Instruction.WRITE) {
+                if(cStart < 0) {
+                    cStart = i;
+                    console.log("Entered WRITE", cStart);
+                    cBuffer = op[1];
+                } else
+                    cBuffer += op[1];
+            } else if(cStart > -1) {
+                var len = i - cStart;
+                cStart = -1;
+                console.log("Left WRITE", len);
+                if(len > 1) {
+                    i -= len;
+                    this._compiled.splice(i, len,
+                        [Instruction.WRITE, cBuffer]);
+                }
+                cBuffer = "";
+            }
+        }
+        console.log(cStart);
+        if(cStart > -1) {
+            var len = i - cStart;
+            cStart = -1;
+            console.log("Left WRITE", len);
+            if(len > 1) {
+                i -= len;
+                this._compiled.splice(i, len,
+                    [Instruction.WRITE, cBuffer]);
+            }
+            cBuffer = "";
+        }
     }
     
 }

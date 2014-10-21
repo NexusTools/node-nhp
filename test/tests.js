@@ -12,29 +12,29 @@ it('include index.js', function() { // added "done" as parameter
 describe('Code', function() {
     describe('Constants', function() {
         it('true', function() {
-            var code = nhp.createCode("true");
+            var code = nhp.compileCode("true");
             assert.equal(code.run(), true);
         });
         it('false', function() {
-            var code = nhp.createCode("false");
+            var code = nhp.compileCode("false");
             assert.equal(code.run(), false);
         });
         it('null', function() {
-            var code = nhp.createCode("null");
+            var code = nhp.compileCode("null");
             assert.equal(code.run(), null);
         });
         it('undefined', function() {
-            var code = nhp.createCode("undefined");
+            var code = nhp.compileCode("undefined");
             assert.equal(code.run(), undefined);
         });
     });
     describe('Comparisons', function() {
         it('12 == 12 == true', function() {
-            var code = nhp.createCode("12 == 12");
+            var code = nhp.compileCode("12 == 12");
             assert.equal(code.run(), true);
         });
         it('false || true == true', function() {
-            var code = nhp.createCode("false || true");
+            var code = nhp.compileCode("false || true");
             assert.equal(code.run(), true);
         });
     });
@@ -42,9 +42,12 @@ describe('Code', function() {
         it('code false || ( 0 || "Farm" ) == "Farm"', undefined);
     });
 });
+var compiledTemplate;
 describe('Compile', function() {
-    it('compile simple test', function(done) {
-    	nhp.compile(__dirname + path.sep + "test.nhp", undefined, function(error) {
+    it('compile test', function(done) {
+    	compiledTemplate = nhp.compile(
+                __dirname + path.sep +
+                "test.nhp", function(error) {
     		if(error)
     			throw error;
     		

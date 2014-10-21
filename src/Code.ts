@@ -1,5 +1,7 @@
 @target ES5
 
+@include Instruction
+
 class StackFrame {
     private _last:any;
     private _value:any;
@@ -9,7 +11,7 @@ class StackFrame {
         return this._value;
     }
     
-    private static _mathOps:Array<Function> = {
+    private static _operators:Array<Function> = {
         "*": function(left, right) {
             return left * right;
         },
@@ -72,13 +74,19 @@ class StackFrame {
         }
     };
     
-    public pushMath(op:string):void {
+    public pushOperator(op:string):void {
         if(this._op)
-            throw new Error("Operation already queued");
+            throw new Error("Operator already queued");
         
-        this._op = StackFrame._mathOps[op];
+        try {
+            if("_operators" in this._value &&
+                    op in this._value._operators)
+                this._op = this._value._operators[op];
+        } catch(e) {}
         if(!this._op)
-            throw new Error("Unknown math operation: " + op);
+            this._op = StackFrame._operators[op];
+        if(!this._op)
+            throw new Error("Unknown operator: " + op);
         this._last = this._value;
         this._value = undefined;
     }
@@ -112,8 +120,8 @@ class CodeStack {
     public pushValue(value):void {
         this._frame.pushValue(value);
     }
-    public pushMath(op:string):void {
-        this._frame.pushMath(op);
+    public pushOperator(op:string):void {
+        this._frame.pushOperator(op);
     }
     
     public pushFrame():void {
@@ -154,20 +162,16 @@ class Code {
     private static startBlock = /^\(/;
     private static endBlock = /^\)/;
     
-    private _source;
     private _compiled;
+    private _source:Array<Array>;
     private _ops:Array<Array> = [];
     constructor(nhp) {
         this.nhp = nhp;
         this.registerOp(Code.whitespaceReg, function() {});
-        this.registerOp(Code.numberReg, function(match, parts, constants) {
-            var value = match[1]*1.0;
-            
-            parts.push(function(context, stack:CodeStack) {
-                stack.pushValue(value);
-            });
+        this.registerOp(Code.numberReg, function(match, constants) {
+            return [Instruction.VALUE, match[1]*1.0];
         });
-        this.registerOp(Code.variableReg, function(match, parts, constants) {
+        this.registerOp(Code.variableReg, function(match, constants) {
             try {
                 var constant = undefined;
                 if(match[1] in constants)
@@ -175,19 +179,13 @@ class Code {
                 if(constant === undefined)
                     throw "No such constant";
 
-                parts.push(function(context, stack:CodeStack) {
-                    stack.pushValue(constant);
-                });
+                return [Instruction.VALUE, constant];
             } catch(e) {
-                parts.push(function(context, stack:CodeStack) {
-                    stack.pushValue(context[match[1]]);
-                });
+                return [Instruction.VARIABLE, match[1]];
             } 
         });
-        this.registerOp(Code.mathReg, function(match, parts, constants) {
-            parts.push(function(context, stack:CodeStack) {
-                stack.pushMath(match[1]);
-            });
+        this.registerOp(Code.mathReg, function(match, constants) {
+            return [Instruction.OPERATOR, match[1]];
         });
     }
     
@@ -195,29 +193,69 @@ class Code {
         this._ops.push([pattern, handler]);
     }
     
-    public compile(source:string, constants:any) {
-        constants = constants || {};
-        this.nhp.applyConstants(constants);
+    public process(source, constants:any) {
+        if(source instanceof Array)
+            this._source = source;
+        else {
+            constants = constants || {};
+            this.nhp.applyConstants(constants);
+            
+            var sourceParts = [];
+            while(source.length > 0) {
+                var match;
+                try {
+                    this._ops.forEach(function(op, index) {
+                        if(match = source.match(op[0])) {
+                            var part = op[1](match, constants);
+                            if(part)
+                                sourceParts.push(part);
+                            throw Code.$break;
+                        }
+                    });
+                } catch(e) {
+                    if(e != Code.$break)
+                        throw e;
+                }
+
+                if(!match)
+                    throw new Error("Syntax error: " + source);
+                source = source.substring(match[0].length);
+            }
+            this._source = sourceParts;
+        }
+        console.log(this._source);
+        return this._source;
+    }
+    
+    public compile(source, constants:any) {
+        if(source)
+            this.process(source, constants);
         
         var parts = [];
-        while(source.length > 0) {
-            var match;
-            try {
-                this._ops.forEach(function(op) {
-                    if(match = source.match(op[0])) {
-                        op[1](match, parts, constants);
-                        throw Code.$break;
-                    }
-                });
-            } catch(e) {
-                if(e != Code.$break)
-                    throw e;
+        this._source.forEach(function(part) {
+            switch(part[0]) {
+                case Instruction.VALUE:
+                    parts.push(function(context, stack:CodeStack) {
+                        stack.pushValue(part[1]);
+                    });
+                    break;
+                    
+                case Instruction.VARIABLE:
+                    parts.push(function(context, stack:CodeStack) {
+                        stack.pushValue(context[part[1]]);
+                    });
+                    break;
+                    
+                case Instruction.OPERATOR:
+                    parts.push(function(context, stack:CodeStack) {
+                        stack.pushOperator(part[1]);
+                    });
+                    break;
+                    
+                default:
+                    throw new Error("Unhandled Operation: " + part[0]);
             }
-            
-            if(!match)
-                throw new Error("Syntax error: " + source);
-            source = source.substring(match[0].length);
-        }
+        });
         this._compiled = parts;
     }
     

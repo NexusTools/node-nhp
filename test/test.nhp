@@ -1,1 +1,1 @@
-<html><head><title>{{title}}</title></head></html>
+<html class="{{platform}}"><head><title>{{title}}</title></head></html>

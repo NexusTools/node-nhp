@@ -41,6 +41,7 @@
 		"node" : ">=1.0.0"
 	},
 	"dependencies": {
+        "bson": "latest",
 		"typescript": "latest",
 		"htmlparser2": "latest",
 		"typeinclude": "latest",
