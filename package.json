@@ -41,6 +41,7 @@
 		"node" : ">=1.0.0"
 	},
 	"dependencies": {
+		"typescript": "latest",
 		"htmlparser2": "latest",
 		"typeinclude": "latest",
 		"yargs": "latest"
