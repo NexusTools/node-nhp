@@ -1,8 +1,12 @@
 /node_modules
+/typeinclude-cache
 /coverage
 /test
+/temp
+/tmp
 
 *~
 *.bak
 .travis.yml
 .gitignore
+.git

@@ -1,5 +1,8 @@
 /node_modules
+/typeinclude-cache
 /coverage
+/temp
+/tmp
 
 *.bak
 *~
