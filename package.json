@@ -32,7 +32,8 @@
 		"test-travis": "istanbul cover node_modules/mocha/bin/_mocha --report lcovonly --  --timeout 20000 --require test/support/env --reporter spec --globals __typeinclude__ --check-leaks test/",
         "postinstall": "tscac src"
 	},
-	"main" : "index",
+    "preferGlobal": true,
+	"main" : "index.ts",
 	"bin" : {
 		"nhpc" : "./bin/nhpc" 
 	},
@@ -40,8 +41,11 @@
 		"node" : ">=1.0.0"
 	},
 	"dependencies": {
+		"typescript": "latest",
+		"typeinclude": "latest",
 		"htmlparser2": "latest",
-		"typeinclude": "latest"
+        "yargs": "latest",
+        "bson": "latest"
 	},
 	"devDependencies": {
 		"istanbul": "0.3.2",
