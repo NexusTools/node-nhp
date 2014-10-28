@@ -29,14 +29,18 @@ describe('Code', function() {
         });
     });
     describe('Comparisons', function() {
-        it('12 == 12 == true', function() {
+        it('`12 == 12` == true', function() {
             var code = nhp.compileCode("12 == 12");
             assert.equal(code.run(), true);
         });
-        it('false || true == true', function() {
+        it('`false || true` == true', function() {
             var code = nhp.compileCode("false || true");
             assert.equal(code.run(), true);
         });
+        it('`false ? "Yes" : "No"` == true'/*, function() {
+            var code = nhp.compileCode("false ? \"Yes\" : \"No\"");
+            assert.equal(code.run(), "No");
+        }*/);
     });
     describe('Brackets', function() {
         it('code false || ( 0 || "Farm" ) == "Farm"', undefined);

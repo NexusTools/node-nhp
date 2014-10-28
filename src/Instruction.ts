@@ -2,9 +2,12 @@ enum Instruction {
     WRITE, // Write data to the stream
     WRITECODE, // Execute and write template code to the stream
     
-    VALUE, // pushValue operation
+    PUSH,
+    POP,
+    
+    VALUE, // pushValue
     VARIABLE,
-    OPERATOR, // pushOp operation
+    OPERATOR, // pushOp
     
     IF,
     ELSEIF,
