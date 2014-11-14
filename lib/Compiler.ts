@@ -98,6 +98,13 @@ class Compiler {
 				} else
                 	self._instructions.push(new Echo("<" + data + ">"));
             },
+			oncomment: function(data) {
+				logger.gears("oncomment", arguments);
+                self._instructions.push(new Echo("<!--" + data + "-->"));
+			},
+			oncommentend: function() {
+				logger.gears("oncommentend", arguments);
+			},
             onerror: function(err) {
 				logger.gears("onerror", arguments);
 				callback(err);

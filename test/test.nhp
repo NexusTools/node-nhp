@@ -1,5 +1,9 @@
 <!DOCTYPE html>
 <html class="{{platform}}"><head><title>{{title}}</title>
+<!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.2/html5shiv.min.js"></script>
+<![endif]-->
+</head><body>
     {{name || "Father Harrington"}}
 	{{#lookup}} {{Date.now()}}
 
@@ -8,4 +12,4 @@
 <?done?></ul>
 <pre>
     {{{__series}}}
-</pre></head></html>
+</pre></body></html>
