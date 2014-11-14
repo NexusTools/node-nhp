@@ -2,12 +2,14 @@
 @nodereq path
 
 @reference Instruction
+@reference Resolver
 
 @include Template
 
 class NHP {
     private constants:Object;
 	private templates:Array<Template> = {};
+	private resolvers = {};
     
     public static create(constants:Object) {
         return new NHP(constants);
@@ -18,13 +20,17 @@ class NHP {
 			return new NHP(constants);
 		
         this.constants = constants || {};
-        
-        // common classes
-        this.constants.RegExp = this.constants.RegExp || Date;
-        this.constants.String = this.constants.String || String;
-        this.constants.Array = this.constants.Array || Array;
-        this.constants.Date = this.constants.Date || Date;
     }
+
+	public resolver(name:String):Resolver {
+		if(!(name in this.resolvers))
+			throw new Error("No resolver found with name `" + name + "`");
+		return this.resolvers[name];
+	}
+
+	public installResolver(name:String, resolver:Resolver) {
+		this.resolvers[name] = resolver;
+	}
 
     public setConstant(name, value) {
         if(this.hasConstant(name))

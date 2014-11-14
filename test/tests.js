@@ -20,6 +20,17 @@ describe('api', function() {
     });
     it('run test', function(done) {
 		template.run({
+			platform: "nodejs",
+			title: "Many people",
+			entries: [
+				"Dog",
+				"Snake",
+				"Hamster",
+				"Bird",
+				"Cat",
+				"Cow"
+			],
+			name: false
 		}, process.stdout, function(err) {
 			if(err) {
 				done(err);

@@ -1,3 +1,10 @@
 <html class="{{platform}}"><head><title>{{title}}</title>
-    {{__series || "Father Harrington"}}
-</head></html>
+    {{name || "Father Harrington"}}
+	{{#lookup}} {{Date.now()}}
+
+<ul><?each entries?>
+	<li>{{entry}}</li>
+<?done?></ul>
+<pre>
+    {{{__series}}}
+</pre></head></html>

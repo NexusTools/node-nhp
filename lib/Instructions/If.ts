@@ -4,11 +4,9 @@
 @reference Instruction
 
 class Moustache implements Instruction {
-	private _source:String;
-	private _attrib:boolean;
-	private _raw:boolean;
+	private _condition:String;
 	
-	constructor(source:String, attrib:boolean, raw:boolean) {
+	constructor(source:String, attrib:boolean) {
 		try {
 			vm.createScript(source); // Verify it compiles
 		} catch(e) {
@@ -18,7 +16,6 @@ class Moustache implements Instruction {
 		
 		this._source = source;
 		this._attrib = attrib;
-		this._raw = raw;
 	}
 	
 	save():String {
@@ -32,10 +29,7 @@ class Moustache implements Instruction {
 	}
 	
 	generateSource():String {
-		var source = "try{__out.write(__string(" + this._source;
-		if(this._raw)
-			source += ",true";
-		source += "));}catch(e){__out.write(__error(e";
+		var source = "try{__out.write(__string(" + this._source + "));}catch(e){__out.write(__error(e";
 		if(this._attrib)
 			source += ",true";
 		source += "));};__next();";

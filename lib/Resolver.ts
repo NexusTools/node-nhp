@@ -1,5 +1,5 @@
 @noautocompile
 
 interface Resolver {
-	resolve(callback:Function);
+	resolve(callback:Function => (err, value:any));
 }

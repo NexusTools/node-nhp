@@ -10,11 +10,13 @@
 
 // Instructions
 @include Moustache
+@include MoustacheResolver
 @include Echo
 
 class Compiler {
-    private _nhp;
+	private static resolverRegex = /^\#/;
 	private _instructions:Array<Instruction> = [];
+    private _nhp;
     
     constructor(nhp) {
         this._nhp = nhp;
@@ -23,14 +25,28 @@ class Compiler {
 	private static compileText(text:String, compiler, attrib:boolean = false) {
 		var at = 0, next;
 		while((next = text.indexOf("{{", at)) > -1) {
-			var end = text.indexOf("}}", next+2);
+			var size;
+			var raw;
+			var end = -1;
+			if(text.substring(next+2, next+3) == "{") {
+				end = text.indexOf("}}}", next+(size = 3));
+				raw = true;
+			} else  {
+				end = text.indexOf("}}", next+(size = 2));
+				raw = false;
+			}
 			if(end < 0)
 				break; // No end, just output the malformed code...
 			
 			if(next > at)
     			compiler._instructions.push(new Echo(text.substring(next, at)));
-    		compiler._instructions.push(new Moustache(text.substring(next+2, end), attrib));
-			at = end + 2;
+			
+			var moustache = text.substring(next+size, end);
+			if(Compiler.resolverRegex.test(moustache))
+    			compiler._instructions.push(new MoustacheResolver(moustache.substring(1), attrib, raw));
+			else
+    			compiler._instructions.push(new Moustache(moustache, attrib, raw));
+			at = end + size;
 		}
 		if(at < text.length)
     		compiler._instructions.push(new Echo(text.substring(at)));
@@ -66,6 +82,7 @@ class Compiler {
             },
             onprocessinginstruction: function(name, data) {
 				console.log("onprocessinginstruction", arguments);
+				throw new Error("Cannot handle");
             },
             onerror: function(err) {
 				console.log("onerror", arguments);

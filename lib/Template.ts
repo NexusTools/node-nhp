@@ -79,7 +79,9 @@ class Template extends events.EventEmitter {
     
     public run(context, out:stream.Writable, callback) {
 		var vmc = vm.createContext();
+		_.extend(vmc, this._nhp.constants);
 		_.extend(vmc, context);
+		var self = this;
 		
 		vmc.__out = out;
 		vmc.__done = callback;
@@ -87,13 +89,18 @@ class Template extends events.EventEmitter {
 		vmc.__series = async.series;
 		vmc.__each = async.eachSeries;
 		vmc.__encode = entities.encodeHTML;
+		vmc.__resolver = function(name) {
+			return self._nhp.resolver(name);
+		}
 		vmc.__error = function(err, attrib:boolean = false) {
 			err = entities.encodeHTML("" + err);
 			if(attrib)
 				return err;
 			return "<error>" + err + "</error>";
 		}
-		vmc.__string = function(data) {
+		vmc.__string = function(data, raw) {
+			if(raw)
+				return "" + data;
 			return entities.encodeHTML("" + data);
 		}
 		this._compiledScript.runInContext(vmc);
