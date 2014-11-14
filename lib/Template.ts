@@ -50,8 +50,6 @@ class Template extends events.EventEmitter {
 				if(err) throw err;
 				var firstTime = !self._compiledScript;
 				
-				logger.gears(self._compiler);
-				
 				self._compiler.optimize(self._nhp.constants, function(err) {
 					try {
 						if(err) throw err;
