@@ -82,7 +82,14 @@ class Compiler {
             },
             onprocessinginstruction: function(name, data) {
 				console.log("onprocessinginstruction", arguments);
-				throw new Error("Cannot handle");
+				if(name == data) {
+					name = name.substring(1, name.length-1);
+					data = "";
+				} else {
+					data = data.substring(name.length+1, data.length-1);
+					name = name.substring(1);
+				}
+                self._instructions.push(self._nhp.processingInstruction(name, data));
             },
             onerror: function(err) {
 				console.log("onerror", arguments);
@@ -97,17 +104,47 @@ class Compiler {
     }
 
 	public generateSource() {
-		var first = true;
+		var stack=[{
+			first: true
+		}];
+		var stackControl = {
+			push: function() {
+				stack.push({
+					first: stack[stack.length-1].first,
+					pushed: true
+				});
+			},
+			pop: function() {
+				if(stack.length < 2)
+					throw new Error("Cannot pop anymore frames from the stack...");
+				
+				stack.pop();
+				stack[stack.length-1].popped = true;
+			}
+		};
 		var source = "__series([";
 		this._instructions.forEach(function(instruction) {
-			if(first)
-				first = false;
-			else
-				source += ",";
+			var instructionSource = instruction.generateSource(stackControl);
+			var frame = stack[stack.length-1];
 			
-			source += "function(__next){";
-			source += instruction.generateSource();
-			source += "}";
+			if(!frame.popped) {
+				if(frame.first)
+					frame.first = false;
+				else
+					source += ",";
+			}
+			if(frame.pushed)
+				frame.first = true;
+			
+			if(!frame.popped)
+				source += "function(__next){";
+			else
+				delete frame.popped;
+			source += instructionSource;
+			if(!frame.pushed)
+				source += "}";
+			else
+				delete frame.pushed;
 		});
 		source += "], __done);";
 		return source;

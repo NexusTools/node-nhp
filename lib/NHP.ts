@@ -2,13 +2,36 @@
 @nodereq path
 
 @reference Instruction
-@reference Resolver
 
 @include Template
+
+@include Each
+@include Done
+
+@include If
+@include ElseIf
 
 class NHP {
     private constants:Object;
 	private templates:Array<Template> = {};
+	private processors = {
+		"each": function(data) {
+			return new Each(data);
+		},
+		"done": function() {
+			return new Done();
+		},
+		
+		"if": function(condition) {
+			return new If(condition);
+		},
+		"elseif": function(condition) {
+			return new ElseIf(condition);
+		},
+		"endif": function() {
+			return new Done();
+		}
+	};
 	private resolvers = {};
     
     public static create(constants:Object) {
@@ -22,13 +45,19 @@ class NHP {
         this.constants = constants || {};
     }
 
+	public processingInstruction(name, data) {
+		if(!(name in this.processors))
+			throw new Error("No processor found with name `" + name + "`");
+		return this.processors[name](data);
+	}
+
 	public resolver(name:String):Resolver {
 		if(!(name in this.resolvers))
 			throw new Error("No resolver found with name `" + name + "`");
 		return this.resolvers[name];
 	}
 
-	public installResolver(name:String, resolver:Resolver) {
+	public installResolver(name:String, resolver:Function/* => (calllback:Function => (err, value))*/) {
 		this.resolvers[name] = resolver;
 	}
 

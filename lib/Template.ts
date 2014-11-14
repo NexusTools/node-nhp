@@ -87,10 +87,22 @@ class Template extends events.EventEmitter {
 		vmc.__done = callback;
 		vmc.console = console;
 		vmc.__series = async.series;
-		vmc.__each = async.eachSeries;
+		vmc.__each = function(eachOf, iterator, callback) {
+			if(_.isArray(eachOf))
+				async.eachSeries(eachOf, iterator, callback);
+			else if(_.isObject(eachOf))
+				async.eachSeries(_.keys(eachOf), function(key, callback) {
+					iterator({
+						"key": key,
+						"value": eachOf[key]
+					}, callback);
+				}, callback);
+			else
+				callback(); // Silently fail
+		};
 		vmc.__encode = entities.encodeHTML;
-		vmc.__resolver = function(name) {
-			return self._nhp.resolver(name);
+		vmc.__resolver = function(name, callback) {
+			self._nhp.resolver(name)(callback);
 		}
 		vmc.__error = function(err, attrib:boolean = false) {
 			err = entities.encodeHTML("" + err);
