@@ -18,6 +18,7 @@ logger = logger("nhp");
 
 class Compiler {
 	private static resolverRegex = /^\#/;
+	private static logicRegex = /^\?.+\?$/;
 	private _instructions:Array<Instruction> = [];
     private _nhp;
     
@@ -85,14 +86,17 @@ class Compiler {
             },
             onprocessinginstruction: function(name, data) {
 				logger.gears("onprocessinginstruction", arguments);
-				if(name == data) {
-					name = name.substring(1, name.length-1);
-					data = "";
-				} else {
-					data = data.substring(name.length+1, data.length-1);
-					name = name.substring(1);
-				}
-                self._instructions.push(self._nhp.processingInstruction(name, data));
+				if(Compiler.logicRegex.test(data)) {
+					if(name == data) {
+						name = name.substring(1, name.length-1);
+						data = "";
+					} else {
+						data = data.substring(name.length+1, data.length-1);
+						name = name.substring(1);
+					}
+					self._instructions.push(self._nhp.processingInstruction(name, data));
+				} else
+                	self._instructions.push(new Echo("<" + data + ">"));
             },
             onerror: function(err) {
 				logger.gears("onerror", arguments);

@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html class="{{platform}}"><head><title>{{title}}</title>
     {{name || "Father Harrington"}}
 	{{#lookup}} {{Date.now()}}
