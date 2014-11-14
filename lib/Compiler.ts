@@ -151,7 +151,22 @@ class Compiler {
 	}
 	
 	public optimize(constants:any, callback:Function) {
-		// TODO: Implement optimizations
+		var cBuffer = "";
+		var optimized = [];
+		this._instructions.forEach(function(instruction) {
+			if(instruction instanceof Echo)
+				cBuffer += instruction._data;
+			else {
+				if(cBuffer.length > 0) {
+					optimized.push(new Echo(cBuffer));
+					cBuffer = "";
+				}
+				optimized.push(instruction);
+			}
+		});
+		if(cBuffer.length > 0)
+			optimized.push(new Echo(cBuffer));
+		this._instructions = optimized;
 		callback();
 	}
     
