@@ -10,6 +10,9 @@
 
 @include If
 @include ElseIf
+@include EndIf
+
+@include Include
 
 class NHP {
     private constants:Object;
@@ -30,6 +33,10 @@ class NHP {
 		},
 		"endif": function() {
 			return new Done();
+		},
+		
+		"include": function(file) {
+			return new Include(file);
 		}
 	};
 	private resolvers = {};

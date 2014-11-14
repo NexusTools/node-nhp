@@ -13,12 +13,7 @@ class Done implements Instruction {
 	
 	generateSource(stack):String {
 		stack.pop();
-		var source = "], __next);}, __next);}catch(e){__out.write(__error(e";
-		if(this._attrib)
-			source += ",true";
-		source += "));__next();};";
-		
-		return source;
+		return "], __next);}, __next);}catch(e){__out.write(__error(e));__next();};";
 	}
 	
 	run(runtime:Runtime, out:stream.Writable, callback:Function) {

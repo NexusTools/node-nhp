@@ -3,7 +3,8 @@
 class Include implements Instruction {
 	private _file:String;
 	
-	constructor() {
+	constructor(file) {
+		this._file = file;
 	}
 	
 	save():String {
@@ -13,6 +14,14 @@ class Include implements Instruction {
 	}
 	
 	process(source:String) {
+	}
+	
+	generateSource(stack):String {
+		stack.pop();
+		var source = "try{__include(";
+		source += JSON.stringify(this._file);
+		source += ", __out, __next);}catch(e){__out.write(__error(e));__next();};";
+		return source;
 	}
 	
 	run(runtime:Runtime, out:stream.Writable) {

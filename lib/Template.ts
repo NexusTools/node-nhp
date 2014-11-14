@@ -8,6 +8,8 @@
 
 @include Compiler
 
+logger = logger("nhp");
+
 class Template extends events.EventEmitter {
     private _nhp;
 	private _compiledScript;
@@ -48,14 +50,14 @@ class Template extends events.EventEmitter {
 				if(err) throw err;
 				var firstTime = !self._compiledScript;
 				
-				console.dir(self._compiler);
+				logger.gears(self._compiler);
 				
 				self._compiler.optimize(self._nhp.constants, function(err) {
 					try {
 						if(err) throw err;
 						
 						var source = self._compiler.generateSource();
-						console.log("Generated source code", source);
+						logger.gears("Generated source code", source);
 						
 						self._compiledScript = vm.createScript(source.toString(), self._filename);
 
@@ -85,7 +87,6 @@ class Template extends events.EventEmitter {
 		
 		vmc.__out = out;
 		vmc.__done = callback;
-		vmc.console = console;
 		vmc.__series = async.series;
 		vmc.__each = function(eachOf, iterator, callback) {
 			if(_.isArray(eachOf))

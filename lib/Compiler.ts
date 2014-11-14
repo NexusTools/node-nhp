@@ -1,4 +1,5 @@
 @nodereq htmlparser2
+@nodereq nulllogger:logger
 @nodereq underscore:_
 @nodereq stream
 @nodereq async
@@ -12,6 +13,8 @@
 @include Moustache
 @include MoustacheResolver
 @include Echo
+
+logger = logger("nhp");
 
 class Compiler {
 	private static resolverRegex = /^\#/;
@@ -61,7 +64,7 @@ class Compiler {
 		var self = this;
         var parser = new htmlparser2.Parser({
             onopentag: function(name, attribs){
-				console.log("onopentag", arguments);
+				logger.gears("onopentag", arguments);
 				
 				self._instructions.push(new Echo("<" + name));
                 for(var key in attribs) {
@@ -72,16 +75,16 @@ class Compiler {
                 self._instructions.push(new Echo(">"));
             },
             ontext: function(text){
-				console.log("ontext", arguments);
+				logger.gears("ontext", arguments);
 				Compiler.compileText(text, self);
             },
             onclosetag: function(name){
-				console.log("onclosetag", arguments);
+				logger.gears("onclosetag", arguments);
 				
                 self._instructions.push(new Echo("</" + name + ">"));
             },
             onprocessinginstruction: function(name, data) {
-				console.log("onprocessinginstruction", arguments);
+				logger.gears("onprocessinginstruction", arguments);
 				if(name == data) {
 					name = name.substring(1, name.length-1);
 					data = "";
@@ -92,11 +95,11 @@ class Compiler {
                 self._instructions.push(self._nhp.processingInstruction(name, data));
             },
             onerror: function(err) {
-				console.log("onerror", arguments);
+				logger.gears("onerror", arguments);
 				callback(err);
 			},
             onend: function() {
-				console.log("onend", arguments);
+				logger.gears("onend", arguments);
 				callback();
             }
         });
