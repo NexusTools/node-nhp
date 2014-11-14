@@ -2,8 +2,8 @@
 
 node-nhp
 --------
-node-nhp is a html templating language which uses tags similar to php, but a javascript like language syntax.
+node-nhp is a html templating language which uses the moustache syntax, and tags similar to php for methods.
 
 legal
 -----
-node-typeinclude is licensed under [Apache License 2.0](LICENSE.md)
+node-nhp is licensed under [Apache License 2.0](LICENSE.md)

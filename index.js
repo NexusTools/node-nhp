@@ -1,3 +1,5 @@
 var path = require("path");
-var typeinclude = require("typeinclude")(__dirname);
-module.exports = typeinclude("NHP", __dirname + path.sep + "src");
+var logger = require("nulllogger");
+var typeinclude = require("typeinclude")(__dirname,
+				path.resolve(__dirname, "lib", "Instructions"));
+module.exports = typeinclude("NHP");

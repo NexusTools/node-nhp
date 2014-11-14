@@ -1,1 +1,3 @@
-<html class="{{platform}}"><head><title>{{title}}</title></head></html>
+<html class="{{platform}}"><head><title>{{title}}</title>
+    {{__series || "Father Harrington"}}
+</head></html>

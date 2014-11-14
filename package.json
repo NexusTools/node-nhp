@@ -9,7 +9,7 @@
 			"url": "http://www.apache.org/licenses/LICENSE-2.0.html"
 		}
 	],
-	"description": "node-nhp is a html templating language which uses tags similar to php, but a javascript like language syntax.",
+	"description": "nhp is a html templating language which uses the moustache syntax, and tags similar to php for methods.",
 	"keywords": [
 		"nhp",
 		"html",
@@ -30,8 +30,9 @@
 	"scripts": {
 		"test": "mocha --timeout 10000 --require test/support/env --reporter spec --globals __typeinclude__ --check-leaks test/",
 		"test-travis": "istanbul cover node_modules/mocha/bin/_mocha --report lcovonly --  --timeout 20000 --require test/support/env --reporter spec --globals __typeinclude__ --check-leaks test/",
-        "postinstall": "tscac src || true"
+        "postinstall": "tscac"
 	},
+	"typesource": "lib",
     "preferGlobal": true,
 	"main" : "index.ts",
 	"bin" : {
@@ -41,10 +42,12 @@
 		"node" : ">=1.0.0"
 	},
 	"dependencies": {
+		"async": "latest",
+		"underscore": "latest",
 		"htmlparser2": "latest",
 		"typeinclude": "latest",
-        "yargs": "latest",
-        "bson": "latest"
+		"nulllogger": "latest",
+		"entities": "latest"
 	},
 	"devDependencies": {
 		"istanbul": "0.3.2",
