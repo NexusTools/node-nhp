@@ -21,6 +21,40 @@ class Compiler {
 	private static logicRegex = /^\?.+\?$/;
 	private _instructions:Array<Instruction> = [];
     private _nhp;
+
+	// https://github.com/fb55/htmlparser2/blob/748d3da71dc664afb8357aabfe6c4a6f74644a0e/lib/Parser.js#L59
+	private static voidElements = [
+		"area",
+		"base",
+		"basefont",
+		"br",
+		"col",
+		"command",
+		"embed",
+		"frame",
+		"hr",
+		"img",
+		"input",
+		"isindex",
+		"keygen",
+		"link",
+		"meta",
+		"param",
+		"source",
+		"track",
+		"wbr",
+
+		//common self closing svg elements
+		"path",
+		"circle",
+		"ellipse",
+		"line",
+		"rect",
+		"use",
+		"stop",
+		"polyline",
+		"polygone"
+	];
     
     constructor(nhp) {
         this._nhp = nhp;

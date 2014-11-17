@@ -2,7 +2,7 @@
 	"name": "nhp",
 	"author": "NexusTools",
 	"homepage": "https://www.nexustools.net/projects#nhp",
-	"version": "0.2.0",
+	"version": "0.2.2",
 	"licenses": [
 		{
 			"type": "Apache License 2.0", 
@@ -45,7 +45,7 @@
 		"async": "latest",
 		"underscore": "latest",
 		"htmlparser2": "latest",
-		"typeinclude": "latest",
+		"typeinclude": ">=0.5.8",
 		"nulllogger": "latest",
 		"entities": "latest"
 	},
