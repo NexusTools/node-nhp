@@ -57,6 +57,10 @@ class Compiler {
 		"polyline",
 		"polygone"
 	];
+
+	public static isVoidElement(el) {
+		return Compiler.voidElements.indexOf(el) > -1;
+	}
     
     constructor(nhp) {
         this._nhp = nhp;
@@ -113,7 +117,10 @@ class Compiler {
 						Compiler.compileText(attribs[key], self, true);
 						self._instructions.push(new Echo("\""));
 					}
-					self._instructions.push(new Echo(">"));
+					if(Compiler.isVoidElement(name))
+						self._instructions.push(new Echo(" />"));
+					else
+						self._instructions.push(new Echo(">"));
 				},
 				ontext: function(text){
 					logger.gears("ontext", arguments);
@@ -121,8 +128,8 @@ class Compiler {
 				},
 				onclosetag: function(name){
 					logger.gears("onclosetag", arguments);
-
-					self._instructions.push(new Echo("</" + name + ">"));
+					if(!Compiler.isVoidElement(name))
+						self._instructions.push(new Echo("</" + name + ">"));
 				},
 				onprocessinginstruction: function(name, data) {
 					try {

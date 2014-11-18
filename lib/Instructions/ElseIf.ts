@@ -1,9 +1,20 @@
 @reference Instruction
 
+@nodereq vm
+@nodereq nulllogger:logger
+logger = logger("nhp");
+
 class ElseIf implements Instruction {
 	private _condition:String;
 	
 	constructor(condition:String) {
+		try {
+			vm.createScript("(" + condition + ")"); // Verify it compiles
+		} catch(e) {
+			logger.error(e);
+			throw new Error("Failed to compile condition `" + condition + "`");
+		}
+
 		this._condition = condition;
 	}
 	

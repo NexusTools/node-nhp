@@ -6,20 +6,16 @@ logger = logger("nhp");
 
 class Moustache implements Instruction {
 	private _source:String;
-	private _attrib:boolean;
-	private _raw:boolean;
 	
-	constructor(source:String, attrib:boolean, raw:boolean) {
+	constructor(source:String) {
 		try {
-			vm.createScript("(" + source + ")"); // Verify it compiles
+			vm.createScript(source); // Verify it compiles
 		} catch(e) {
 			logger.error(e);
 			throw new Error("Failed to compile source `" + source + "`");
 		}
 		
 		this._source = source;
-		this._attrib = attrib;
-		this._raw = raw;
 	}
 	
 	save():String {
@@ -33,14 +29,7 @@ class Moustache implements Instruction {
 	}
 	
 	generateSource():String {
-		var source = "try{__out.write(__string(" + this._source;
-		if(this._raw)
-			source += ",true";
-		source += "));}catch(e){__out.write(__error(e";
-		if(this._attrib)
-			source += ",true";
-		source += "));};__next();";
-		return source
+		return "try{" + this._source + ";}catch(e){__out.write(__error(e));};__next();";
 	}
 	
 	run(runtime:Runtime, out:stream.Writable) {

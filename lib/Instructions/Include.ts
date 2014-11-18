@@ -9,7 +9,7 @@ class Include implements Instruction {
 	
 	constructor(source) {
 		try {
-			vm.createScript(source); // Verify it compiles
+			vm.createScript("(" + source + ")"); // Verify it compiles
 		} catch(e) {
 			logger.error(e);
 			throw new Error("Failed to compile source `" + source + "`");

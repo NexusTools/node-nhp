@@ -1,9 +1,20 @@
 @reference Instruction
 
+@nodereq vm
+@nodereq nulllogger:logger
+logger = logger("nhp");
+
 class Each implements Instruction {
 	private _eachOf:String;
 	
 	constructor(eachOf:String) {
+		try {
+			vm.createScript("(" + eachOf + ")"); // Verify it compiles
+		} catch(e) {
+			logger.error(e);
+			throw new Error("Failed to compile eachOf `" + eachOf + "`");
+		}
+		
 		this._eachOf = eachOf;
 	}
 	

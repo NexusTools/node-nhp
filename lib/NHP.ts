@@ -7,6 +7,8 @@
 
 @include Set
 @include Add
+
+@include Exec
 @include JSON
 
 @include Each
@@ -29,6 +31,10 @@ class NHP {
 		},
 		"add": function(data) {
 			return new Add(data);
+		},
+		
+		"exec": function(source) {
+			return new Exec(source);
 		},
 		"json": function(source) {
 			return new JSON(source);

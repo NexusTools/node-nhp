@@ -114,10 +114,10 @@ class Template extends events.EventEmitter {
 			_.extend(vmc, this._nhp.constants);
 			_.extend(vmc, context);
 			delete context;
+			vmc.env = {};
 			
 			var self = this;
 			vmc.__out = out;
-			vmc.__global = vmc;
 			vmc.__done = callback;
 			vmc.__series = async.series;
 			vmc.__dirname = this._dirname;
@@ -148,6 +148,18 @@ class Template extends events.EventEmitter {
 						callback();
 				}
 				__next();
+			};
+			vmc.__add = function(to, what) {
+				var arr = vmc.env[to];
+				if(!_.isArray(arr))
+					vmc.env[to] = arr = [];
+				arr.push(what);
+			};
+			vmc.__set = function(what, to) {
+				vmc.env[what] = to;
+			};
+			vmc.__get = function(what) {
+				return vmc.env[what];
 			};
 			vmc.__error = function(err, attrib:boolean = false) {
 				err = entities.encodeHTML("" + err);
