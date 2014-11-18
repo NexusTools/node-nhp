@@ -1,43 +1,22 @@
-@nodereq nulllogger:logger
-@nodereq vm
-
 @reference Instruction
 
-class Moustache implements Instruction {
+class If implements Instruction {
 	private _condition:String;
 	
-	constructor(source:String, attrib:boolean) {
-		try {
-			vm.createScript(source); // Verify it compiles
-		} catch(e) {
-			logger.error(e);
-			throw new Error("Failed to compile source `" + source + "`");
-		}
-		
-		this._source = source;
-		this._attrib = attrib;
+	constructor(condition:String) {
+		this._condition = condition;
 	}
 	
-	save():String {
-		return this._sources;
-	}
+	save():String {}
 	
 	load(data:String) {}
 	
-	process(source:String) {
-		this._source = source;
+	generateSource(stack):String {
+		stack.push();
+		return "try{__if([[function(){return " + this._condition + ";}, [";
 	}
 	
-	generateSource():String {
-		var source = "try{__out.write(__string(" + this._source + "));}catch(e){__out.write(__error(e";
-		if(this._attrib)
-			source += ",true";
-		source += "));};__next();";
-		return source
-	}
-	
-	run(runtime:Runtime, out:stream.Writable) {
-		
+	run(runtime:Runtime, out:stream.Writable, callback:Function) {
 	}
 	
 	async():boolean {
@@ -46,4 +25,4 @@ class Moustache implements Instruction {
 	
 }
 
-@main Moustache
+@main If

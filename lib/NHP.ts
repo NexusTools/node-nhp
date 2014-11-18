@@ -10,6 +10,7 @@
 
 @include If
 @include ElseIf
+@include Else
 @include EndIf
 
 @include Include
@@ -31,8 +32,11 @@ class NHP {
 		"elseif": function(condition) {
 			return new ElseIf(condition);
 		},
+		"else": function() {
+			return new Else();
+		},
 		"endif": function() {
-			return new Done();
+			return new EndIf();
 		},
 		
 		"include": function(file) {

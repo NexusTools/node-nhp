@@ -1,6 +1,7 @@
 @nodereq htmlparser2
 @nodereq nulllogger:logger
 @nodereq underscore:_
+@nodereq domain
 @nodereq stream
 @nodereq async
 @nodereq fs
@@ -97,58 +98,70 @@ class Compiler {
             throw "Source must be a readable stream or a string";
         
 		var self = this;
-        var parser = new htmlparser2.Parser({
-            onopentag: function(name, attribs){
-				logger.gears("onopentag", arguments);
-				
-				self._instructions.push(new Echo("<" + name));
-                for(var key in attribs) {
-                    self._instructions.push(new Echo(" " + key + "=\""));
-					Compiler.compileText(attribs[key], self, true);
-                    self._instructions.push(new Echo("\""));
-                }
-                self._instructions.push(new Echo(">"));
-            },
-            ontext: function(text){
-				logger.gears("ontext", arguments);
-				Compiler.compileText(text, self);
-            },
-            onclosetag: function(name){
-				logger.gears("onclosetag", arguments);
-				
-                self._instructions.push(new Echo("</" + name + ">"));
-            },
-            onprocessinginstruction: function(name, data) {
-				logger.gears("onprocessinginstruction", arguments);
-				if(Compiler.logicRegex.test(data)) {
-					if(name == data) {
-						name = name.substring(1, name.length-1);
-						data = "";
-					} else {
-						data = data.substring(name.length+1, data.length-1);
-						name = name.substring(1);
+		var d = domain.create();
+		d.run(function() {
+			var parser = new htmlparser2.Parser({
+				onopentag: function(name, attribs){
+					logger.gears("onopentag", arguments);
+
+					self._instructions.push(new Echo("<" + name));
+					for(var key in attribs) {
+						self._instructions.push(new Echo(" " + key + "=\""));
+						Compiler.compileText(attribs[key], self, true);
+						self._instructions.push(new Echo("\""));
 					}
-					self._instructions.push(self._nhp.processingInstruction(name, data));
-				} else
-                	self._instructions.push(new Echo("<" + data + ">"));
-            },
-			oncomment: function(data) {
-				logger.gears("oncomment", arguments);
-                self._instructions.push(new Echo("<!--" + data + "-->"));
-			},
-			oncommentend: function() {
-				logger.gears("oncommentend", arguments);
-			},
-            onerror: function(err) {
-				logger.gears("onerror", arguments);
+					self._instructions.push(new Echo(">"));
+				},
+				ontext: function(text){
+					logger.gears("ontext", arguments);
+					Compiler.compileText(text, self);
+				},
+				onclosetag: function(name){
+					logger.gears("onclosetag", arguments);
+
+					self._instructions.push(new Echo("</" + name + ">"));
+				},
+				onprocessinginstruction: function(name, data) {
+					try {
+					logger.gears("onprocessinginstruction", arguments);
+						if(Compiler.logicRegex.test(data)) {
+							if(name == data) {
+								name = name.substring(1, name.length-1);
+								data = "";
+							} else {
+								data = data.substring(name.length+1, data.length-1);
+								name = name.substring(1);
+							}
+							self._instructions.push(self._nhp.processingInstruction(name, data));
+						} else
+							self._instructions.push(new Echo("<" + data + ">"));
+					} catch(e) {
+						self._instructions.push(new Error(e));
+					}
+				},
+				oncomment: function(data) {
+					logger.gears("oncomment", arguments);
+					self._instructions.push(new Echo("<!--" + data + "-->"));
+				},
+				oncommentend: function() {
+					logger.gears("oncommentend", arguments);
+				},
+				onerror: function(err) {
+					logger.gears("onerror", arguments);
+					callback(err);
+				},
+				onend: function() {
+					logger.gears("onend", arguments);
+					callback();
+				}
+			});
+			d.on("error", function(err) {
+				logger.warning(err);
+				source.unpipe(parser);
 				callback(err);
-			},
-            onend: function() {
-				logger.gears("onend", arguments);
-				callback();
-            }
-        });
-        source.pipe(parser);
+			});
+			source.pipe(parser);
+		});
     }
 
 	public generateSource() {
@@ -157,8 +170,10 @@ class Compiler {
 		}];
 		var stackControl = {
 			push: function() {
+				var frame = stack[stack.length-1];
 				stack.push({
-					first: stack[stack.length-1].first,
+					first: frame.first,
+					popped: frame.popped,
 					pushed: true
 				});
 			},
@@ -174,6 +189,7 @@ class Compiler {
 		this._instructions.forEach(function(instruction) {
 			var instructionSource = instruction.generateSource(stackControl);
 			var frame = stack[stack.length-1];
+			logger.debug(instruction.constructor.name, frame);
 			
 			if(!frame.popped) {
 				if(frame.first)

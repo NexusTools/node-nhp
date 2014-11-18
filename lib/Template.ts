@@ -99,6 +99,20 @@ class Template extends events.EventEmitter {
 			else
 				callback(); // Silently fail
 		};
+		vmc.__if = function(segments, callback) {
+			var __next, i = 0;
+			__next = function() {
+				if(i < segments.length) {
+					var segment = segments[i++];
+					if(segment[0]())
+						async.series(segment[1], callback);
+					else
+						__next();
+				} else
+					callback();
+			}
+			__next();
+		};
 		vmc.__encode = entities.encodeHTML;
 		vmc.__resolver = function(name, callback) {
 			self._nhp.resolver(name)(callback);
