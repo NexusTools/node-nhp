@@ -191,7 +191,6 @@ class Compiler {
 		this._instructions.forEach(function(instruction) {
 			var instructionSource = instruction.generateSource(stackControl);
 			var frame = stack[stack.length-1];
-			logger.debug(instruction.constructor.name, frame);
 			
 			if(!frame.popped) {
 				if(frame.first)

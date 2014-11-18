@@ -47,7 +47,7 @@ class Template extends events.EventEmitter {
 		
 		try {
 			var self = this;
-			logger.debug("Compiling", this._filename);
+			logger.gears("Compiling", this._filename);
 			this._compiler = new Compiler(this._nhp);
 			this._compiler.compile(fs.createReadStream(this._filename), function(err) {
 				try {
@@ -60,7 +60,7 @@ class Template extends events.EventEmitter {
 							if(err) throw err;
 
 							source = self._compiler.generateSource();
-							logger.gears("Generated source code", source);
+							logger.debug("Generated source code", this._filename, source);
 							self._compiledScript = vm.createScript(source.toString(), self._filename);
 
 							if(firstTime)
@@ -114,6 +114,7 @@ class Template extends events.EventEmitter {
 			
 			var self = this;
 			vmc.__out = out;
+			vmc.__global = vmc;
 			vmc.__done = callback;
 			vmc.__series = async.series;
 			vmc.__dirname = this._dirname;
@@ -152,7 +153,7 @@ class Template extends events.EventEmitter {
 				return "<error>" + err + "</error>";
 			}
 			vmc.__include = function(file, callback) {
-				logger.debug("Including", file);
+				logger.info("Including", file);
 
 				var template = self._nhp.template(path.resolve(self._dirname, file));
 				if(template.isCompiled())

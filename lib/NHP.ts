@@ -5,6 +5,10 @@
 
 @include Template
 
+@include Set
+@include Add
+@include JSON
+
 @include Each
 @include Done
 
@@ -20,6 +24,16 @@ class NHP {
     private constants:Object;
 	private templates:Array<Template> = {};
 	private processors = {
+		"set": function(data) {
+			return new Set(data);
+		},
+		"add": function(data) {
+			return new Add(data);
+		},
+		"json": function(source) {
+			return new JSON(source);
+		},
+		
 		"each": function(data) {
 			return new Each(data);
 		},

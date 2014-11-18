@@ -1,19 +1,15 @@
-<!DOCTYPE html>
-<html class="{{platform}}"><head><title>{{title}}</title>
-<!--[if lt IE 9]>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.2/html5shiv.min.js"></script>
-<![endif]-->
-</head><body>
+<?Set title "Many people"?><?include head?>
     {{name || "Father Harrington"}}
 	{{#lookup}} {{Date.now()}}
 
 <?if Date.now() < 200?>
-	Juggler
+	<?set type "Juggler"?>
 <?else?>
-	Driver
+	<?set type "Driver"?>
 <?endif?>
 
+	{{type}}
 <ul><?include entries?></ul>
 <pre>
-    {{{__series}}}
-</pre></body></html>
+    <?json entries?>
+</pre><?include foot?>
