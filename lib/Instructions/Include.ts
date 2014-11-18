@@ -1,9 +1,12 @@
 @reference Instruction
 
+var extension = /\.\w+$/;
 class Include implements Instruction {
 	private _file:String;
 	
 	constructor(file) {
+		if(!extension.test(file))
+			file += ".nhp";
 		this._file = file;
 	}
 	
@@ -17,16 +20,13 @@ class Include implements Instruction {
 	}
 	
 	generateSource(stack):String {
-		stack.pop();
 		var source = "try{__include(";
 		source += JSON.stringify(this._file);
-		source += ", __out, __next);}catch(e){__out.write(__error(e));__next();};";
+		source += ", __next);}catch(e){__out.write(__error(e));__next();};";
 		return source;
 	}
 	
-	run(runtime:Runtime, out:stream.Writable) {
-		runtime.include(this._file);
-	}
+	run(runtime:Runtime, out:stream.Writable) {}
 	
 }
 

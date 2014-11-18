@@ -15,6 +15,7 @@
 
 @include Include
 
+var extension = /\.\w+$/;
 class NHP {
     private constants:Object;
 	private templates:Array<Template> = {};
@@ -91,6 +92,8 @@ class NHP {
     }
 
 	public template(filename:String) {
+		if(!extension.test(filename))
+			filename += ".nhp";
 		filename = path.resolve(filename);
 		
 		if(!(filename in this.templates))

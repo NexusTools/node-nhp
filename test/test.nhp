@@ -13,9 +13,7 @@
 	Driver
 <?endif?>
 
-<ul><?each entries?>
-	<li>{{entry}}</li>
-<?done?></ul>
+<ul><?include entries?></ul>
 <pre>
     {{{__series}}}
 </pre></body></html>

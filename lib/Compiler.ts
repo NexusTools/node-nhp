@@ -92,14 +92,16 @@ class Compiler {
 	}
     
     public compile(source:String, callback:Function) {
-        if(_.isString(source))
-            source = new stream.Buffer(source);
-        else if(!(source instanceof stream.Readable))
-            throw "Source must be a readable stream or a string";
-        
 		var self = this;
 		var d = domain.create();
 		d.run(function() {
+			if(_.isString(source))
+				source = new stream.Buffer(source);
+			else if(!(source instanceof stream.Readable))
+				throw "Source must be a readable stream or a string";
+			else
+				d.add(source);
+			
 			var parser = new htmlparser2.Parser({
 				onopentag: function(name, attribs){
 					logger.gears("onopentag", arguments);
