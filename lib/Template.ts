@@ -57,7 +57,10 @@ class Template extends events.EventEmitter {
 					self._compiler.optimize(self._nhp.constants, function(err) {
 						var source;
 						try {
-							if(err) throw err;
+							if(err) {
+								logger.warning(err);
+								throw new Error("Failed to optimize", this._filename, self._compiler._instructions);
+							}
 
 							source = self._compiler.generateSource();
 							logger.debug("Generated source code", this._filename, source);

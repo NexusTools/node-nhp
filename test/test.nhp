@@ -1,4 +1,5 @@
-<?Set title "Many people"?><?include head?>
+<!DOCTYPE html>
+<html><?set title "Many people"?><?include "head"?><body>
     {{name || "Father Harrington"}}
 	{{#lookup}} {{Date.now()}}
 
@@ -9,7 +10,5 @@
 <?endif?>
 
 	{{type}}
-<ul><?include entries?></ul>
-<pre>
-    <?json entries?>
-</pre><?include foot?>
+<ul><?include "entries"?></ul>
+<?include "foot"?></body></html>

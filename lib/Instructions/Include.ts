@@ -1,13 +1,21 @@
 @reference Instruction
 
-var extension = /\.\w+$/;
+@nodereq vm
+@nodereq nulllogger:logger
+logger = logger("nhp");
+
 class Include implements Instruction {
-	private _file:String;
+	private _source:String;
 	
-	constructor(file) {
-		if(!extension.test(file))
-			file += ".nhp";
-		this._file = file;
+	constructor(source) {
+		try {
+			vm.createScript(source); // Verify it compiles
+		} catch(e) {
+			logger.error(e);
+			throw new Error("Failed to compile source `" + source + "`");
+		}
+		
+		this._source = source;
 	}
 	
 	save():String {
@@ -21,7 +29,7 @@ class Include implements Instruction {
 	
 	generateSource(stack):String {
 		var source = "try{__include(";
-		source += JSON.stringify(this._file);
+		source += this._source;
 		source += ", __next);}catch(e){__out.write(__error(e));__next();};";
 		return source;
 	}

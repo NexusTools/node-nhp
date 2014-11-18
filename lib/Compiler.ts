@@ -1,6 +1,7 @@
 @nodereq htmlparser2
 @nodereq nulllogger:logger
 @nodereq underscore:_
+@nodereq entities
 @nodereq domain
 @nodereq stream
 @nodereq async
@@ -125,7 +126,7 @@ class Compiler {
 				},
 				onprocessinginstruction: function(name, data) {
 					try {
-					logger.gears("onprocessinginstruction", arguments);
+						logger.gears("onprocessinginstruction", arguments);
 						if(Compiler.logicRegex.test(data)) {
 							if(name == data) {
 								name = name.substring(1, name.length-1);
@@ -138,7 +139,8 @@ class Compiler {
 						} else
 							self._instructions.push(new Echo("<" + data + ">"));
 					} catch(e) {
-						self._instructions.push(new Error(e));
+						logger.warning(e);
+						self._instructions.push(new Echo("<error>" + entities.encodeHTML(""+e) + "</error>"));
 					}
 				},
 				oncomment: function(data) {
@@ -189,6 +191,8 @@ class Compiler {
 		};
 		var source = "__series([";
 		this._instructions.forEach(function(instruction) {
+			logger.gears(instruction.constructor.name);
+			
 			var instructionSource = instruction.generateSource(stackControl);
 			var frame = stack[stack.length-1];
 			
