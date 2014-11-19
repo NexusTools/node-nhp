@@ -4,11 +4,11 @@
 	{{#lookup}} {{Date.now()}}
 
 <?if Date.now() < 200?>
-	<?set type "Juggler"?>
+	<?set type "Juggler ^__^"?>
 <?else?>
-	<?set type "Driver"?>
+	<?set type "Driver 6002"?>
 <?endif?>
 
-	{{type}}
+	<a href="http://something/{{{env.type}}}">{{type}}</a>
 <ul><?include "entries"?></ul>
 <?include "foot"?></body></html>

@@ -24,6 +24,11 @@
 
 var extension = /\.\w+$/;
 class NHP {
+	private static defaults:Object = {
+		tidyOutput: true
+	}
+	
+    private options:Object;
     private constants:Object;
 	private templates:Array<Template> = {};
 	private processors = {
@@ -74,11 +79,15 @@ class NHP {
         return new NHP(constants);
     }
     
-    public constructor(constants:Object) {
-		if(!(this instanceof NHP)) 
+    public constructor(constants:Object, options:Object) {
+		if(!(this instanceof NHP))
 			return new NHP(constants);
 		
         this.constants = constants || {};
+        this.options = {};
+		_.extend(this.options, NHP.defaults);
+		if(options)
+			_.extend(this.options, options);
     }
 
 	public processingInstruction(name, data) {

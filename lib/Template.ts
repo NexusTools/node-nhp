@@ -124,9 +124,24 @@ class Template extends events.EventEmitter {
 			vmc.__dirname = this._dirname;
 			vmc.__filename = this._filename;
 			vmc.__each = function(eachOf, iterator, callback) {
-				if(_.isArray(eachOf))
-					async.eachSeries(eachOf, iterator, callback);
-				else if(_.isObject(eachOf))
+				var calls = 0;
+				var iterate = function(entry, callback) {
+					if(calls++ >= 500) {
+						process.nextTick(function() {
+							iterator(entry, callback);
+						});
+						calls = 0;
+					} else
+						iterator(entry, callback);
+				}
+				if(_.isArray(eachOf)) {
+					if(eachOf.length > 500)
+						async.eachSeries(eachOf, function(entry, callback) {
+							iterate(entry, callback);
+						}, callback);
+					else
+						async.eachSeries(eachOf, iterate, callback);
+				} else if(_.isObject(eachOf))
 					async.eachSeries(_.keys(eachOf), function(key, callback) {
 						iterator({
 							"key": key,
@@ -168,11 +183,16 @@ class Template extends events.EventEmitter {
 			vmc.__get = function(what) {
 				return vmc.env[what];
 			};
-			vmc.__error = function(err, attrib:boolean = false) {
-				err = entities.encodeHTML("" + err);
-				if(attrib)
-					return err;
-				return "<error>" + err + "</error>";
+			vmc.__error = function(err, encodeMode=false) {
+				err = "" + err;
+				if(encodeMode)
+					switch(encodeMode) {
+						case 2:
+							return encodeURIComponent(err).replace("%20", "+");
+						default:
+							return entities.encodeHTML(err);
+					}
+				return "<error>" + entities.encodeHTML(err) + "</error>";
 			}
 			vmc.__include = function(file, callback) {
 				logger.info("Including", file);
@@ -195,10 +215,16 @@ class Template extends events.EventEmitter {
 			vmc.__resolver = function(name, callback) {
 				self._nhp.resolver(name)(callback);
 			}
-			vmc.__string = function(data, raw) {
-				if(raw)
-					return "" + data;
-				return entities.encodeHTML("" + data);
+			vmc.__string = function(data, encodeMode) {
+				data = ""+data;
+				if(encodeMode)
+					switch(encodeMode) {
+						case 2:
+							return encodeURIComponent(data).replace("%20", "+");
+						default:
+							return data;
+					}
+				return entities.encodeHTML(data);
 			}
 		}
 		this._compiledScript.runInContext(vmc);
