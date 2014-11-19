@@ -1,5 +1,6 @@
 @nodereq nulllogger:logger
 @nodereq underscore:_
+@nodereq htmlparser2
 @nodereq entities
 @nodereq events
 @nodereq async
@@ -118,7 +119,80 @@ class Template extends events.EventEmitter {
 			delete context;
 			
 			var self = this;
-			vmc.__out = out;
+			if(this._nhp.options.tidyOutput) {
+				var realOut = out, parser;
+				var inTag = function(name) {
+					return parser._stack.indexOf(name) > -1;
+				};
+				var validComment;
+				var textTidyBuffer = "";
+				if(this._nhp.options.tidyComments) {
+					if(this._nhp.options.tidyComments == "not-if")
+						validComment = /^\[if .+$/;
+					else
+						validComment = false;
+				} else
+					validComment = /.+/;
+				var endsInSpace = /^.*\s$/, startsWithSpace = /^\s.*$/, endSpace = true;
+				var dumpBuffer = function() {
+					if(textTidyBuffer.length > 0) {
+						textTidyBuffer = textTidyBuffer.replace(/\s+/gm, " ");
+						var _endSpace = endsInSpace.test(textTidyBuffer);
+						if(endSpace && startsWithSpace.test(textTidyBuffer))
+							textTidyBuffer = textTidyBuffer.substring(1);
+						if(textTidyBuffer.length > 0) {
+							realOut.write(textTidyBuffer);
+							textTidyBuffer = "";
+						}
+						endSpace = _endSpace;
+					}
+				}
+				parser = vmc.__out = new htmlparser2.Parser({
+					onopentag: function(name, attribs){
+						dumpBuffer();
+						
+						realOut.write("<" + name);
+						for(var key in attribs)
+							realOut.write(" " + key + "=\"" + attribs[key] + "\"");
+						if(Compiler.isVoidElement(name))
+							realOut.write(" />");
+						else
+							realOut.write(">");
+					},
+					ontext: function(text){
+						if(inTag("pre"))
+							realOut.write(text);
+						else if(inTag("body"))
+							textTidyBuffer += text;
+					},
+					onclosetag: function(name){
+						if(!Compiler.isVoidElement(name)) {
+							dumpBuffer();
+							realOut.write("</" + name +">");
+						}
+					},
+					onprocessinginstruction: function(name, data) {
+						dumpBuffer();
+						realOut.write("<" + data + ">\n"); // Assume doctype
+						// TODO: Check if this is the first thing being written
+					},
+					oncomment: function(data) {
+						if(validComment && validComment.test(data)) {
+							dumpBuffer();
+							realOut.write("<!--" + data + "-->");
+						}
+					},
+					onerror: function(err) {
+						logger.warning(err);
+						realOut.end();
+					},
+					onend: function() {
+						realOut.end();
+					}
+				});
+			} else
+				vmc.__out = out;
+			vmc._ = _;
 			vmc.__done = callback;
 			vmc.__series = async.series;
 			vmc.__dirname = this._dirname;
