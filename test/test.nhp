@@ -11,4 +11,13 @@
 
 	<a href="http://something/{{{env.type}}}">{{type}}</a>
 <ul><?include "entries"?></ul>
+	
+<?map names "Jeff" 3?>
+<?map names "Date" Date.now()?>
+<?map names "Sam"?>
+<ul><?each env.names?>
+	<li>
+		{{entry.key}} - {{entry.value}}
+	</li>
+<?done?></ul>
 <?include "foot"?></body></html>

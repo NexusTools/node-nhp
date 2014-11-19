@@ -15,6 +15,7 @@
 @include MoustacheResolver
 @include Echo
 
+var Template = _typeinclude("Template");
 logger = logger("nhp");
 
 class Compiler {
