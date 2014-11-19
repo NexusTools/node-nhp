@@ -1,7 +1,6 @@
 @nodereq htmlparser2
 @nodereq nulllogger:logger
 @nodereq underscore:_
-@nodereq entities
 @nodereq domain
 @nodereq stream
 @nodereq async
@@ -147,7 +146,7 @@ class Compiler {
 							self._instructions.push(new Echo("<" + data + ">"));
 					} catch(e) {
 						logger.warning(e);
-						self._instructions.push(new Echo("<error>" + entities.encodeHTML(""+e) + "</error>"));
+						self._instructions.push(new Echo("<error>" + Template.encodeHTML(""+e) + "</error>"));
 					}
 				},
 				oncomment: function(data) {

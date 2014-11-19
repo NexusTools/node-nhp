@@ -1,7 +1,6 @@
 @nodereq nulllogger:logger
 @nodereq underscore:_
 @nodereq htmlparser2
-@nodereq entities
 @nodereq events
 @nodereq async
 @nodereq path
@@ -13,6 +12,13 @@
 logger = logger("nhp");
 
 class Template extends events.EventEmitter {
+	private static rawElements = [
+		"textarea",
+		"script",
+		"style",
+		"pre"
+	];
+	
     private _nhp;
 	private _compiledScript;
     private _dirname:String;
@@ -32,6 +38,13 @@ class Template extends events.EventEmitter {
 		});
     }
 
+ 	public static encodeHTML(html:String, attr:boolean) {
+		html = html.replace(["<", ">"], ["&lt;","&gt;"]);
+		if(attr)
+			return html.replace("\"", "&quot;");
+		return html;
+	}
+ 
 	public isCompiled() {
 		return this._compiledScript;
 	}
@@ -118,11 +131,20 @@ class Template extends events.EventEmitter {
 			_.extend(vmc, context);
 			delete context;
 			
-			var self = this;
+				
 			if(this._nhp.options.tidyOutput) {
 				var realOut = out, parser;
 				var inTag = function(name) {
 					return parser._stack.indexOf(name) > -1;
+				};
+				var self = this, tagCache = {};
+				var updateTagCache = function() {
+					tagCache.raw = false;
+					tagCache.body = inTag("body");
+					if(tagCache.body)
+						Template.rawElements.forEach(function(elem) {
+							tagCache.raw = tagCache.raw || inTag(elem);
+						});
 				};
 				var validComment;
 				var textTidyBuffer = "";
@@ -150,6 +172,7 @@ class Template extends events.EventEmitter {
 				parser = vmc.__out = new htmlparser2.Parser({
 					onopentag: function(name, attribs){
 						dumpBuffer();
+						updateTagCache();
 						
 						realOut.write("<" + name);
 						for(var key in attribs)
@@ -160,9 +183,9 @@ class Template extends events.EventEmitter {
 							realOut.write(">");
 					},
 					ontext: function(text){
-						if(inTag("pre"))
+						if(tagCache.raw)
 							realOut.write(text);
-						else if(inTag("body"))
+						else if(tagCache.body)
 							textTidyBuffer += text;
 					},
 					onclosetag: function(name){
@@ -170,6 +193,7 @@ class Template extends events.EventEmitter {
 							dumpBuffer();
 							realOut.write("</" + name +">");
 						}
+						updateTagCache();
 					},
 					onprocessinginstruction: function(name, data) {
 						dumpBuffer();
@@ -264,9 +288,9 @@ class Template extends events.EventEmitter {
 						case 2:
 							return encodeURIComponent(err).replace("%20", "+");
 						default:
-							return entities.encodeHTML(err);
+							return Template.encodeHTML(err, true);
 					}
-				return "<error>" + entities.encodeHTML(err) + "</error>";
+				return "<error>" + Template.encodeHTML(err) + "</error>";
 			}
 			vmc.__include = function(file, callback) {
 				logger.info("Including", file);
@@ -285,20 +309,19 @@ class Template extends events.EventEmitter {
 					});
 				}
 			}
-			vmc.__encode = entities.encodeHTML;
+			vmc.__encode = Template.encodeHTML;
 			vmc.__resolver = function(name, callback) {
 				self._nhp.resolver(name)(callback);
 			}
-			vmc.__string = function(data, encodeMode) {
+			vmc.__string = function(data, attr, triple) {
 				data = ""+data;
-				if(encodeMode)
-					switch(encodeMode) {
-						case 2:
-							return encodeURIComponent(data).replace("%20", "+");
-						default:
-							return data;
-					}
-				return entities.encodeHTML(data);
+				if(attr) {
+					if(triple)
+						return encodeURIComponent(data).replace("%20", "+");
+					return Template.encodeHTML(data, true);
+				} else if(triple)
+					return data;
+				return Template.encodeHTML(data);
 			}
 		}
 		this._compiledScript.runInContext(vmc);
