@@ -226,7 +226,7 @@ class Template extends events.EventEmitter {
 			vmc.__each = function(eachOf, iterator, callback) {
 				var calls = 0;
 				var iterate = function(entry, callback) {
-					if(calls++ >= 500) {
+					if(calls++ >= 50) {
 						process.nextTick(function() {
 							iterator(entry, callback);
 						});
@@ -235,12 +235,10 @@ class Template extends events.EventEmitter {
 						iterator(entry, callback);
 				}
 				if(_.isArray(eachOf)) {
-					if(eachOf.length > 500)
-						async.eachSeries(eachOf, function(entry, callback) {
-							iterate(entry, callback);
-						}, callback);
-					else
+					if(eachOf.length > 50)
 						async.eachSeries(eachOf, iterate, callback);
+					else
+						async.eachSeries(eachOf, iterator, callback);
 				} else if(_.isObject(eachOf))
 					async.eachSeries(_.keys(eachOf), function(key, callback) {
 						iterator({
