@@ -81,8 +81,10 @@ class Compiler {
 			if(end < 0)
 				break; // No end, just output the malformed code...
 			
-			if(next > at)
-    			compiler._instructions.push(new Echo(text.substring(next, at)));
+			if(next > at) {
+				var data = text.substring(next, at);
+    			compiler._instructions.push(new Echo(data.replace('"', "&quote;")));
+			}
 			
 			var moustache = text.substring(next+size, end);
 			if(Compiler.resolverRegex.test(moustache))

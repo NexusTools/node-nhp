@@ -281,15 +281,13 @@ class Template extends events.EventEmitter {
 			vmc.__get = function(what) {
 				return vmc.env[what];
 			};
-			vmc.__error = function(err, encodeMode=false) {
-				err = "" + err;
-				if(encodeMode)
-					switch(encodeMode) {
-						case 2:
-							return encodeURIComponent(err).replace("%20", "+");
-						default:
-							return Template.encodeHTML(err, true);
-					}
+			vmc.__error = function(err, attr, triple) {
+				err = ""+err;
+				if(attr) {
+					if(triple)
+						return encodeURIComponent(err).replace("%20", "+");
+					return Template.encodeHTML(err, true);
+				}
 				return "<error>" + Template.encodeHTML(err) + "</error>";
 			}
 			vmc.__include = function(file, callback) {
