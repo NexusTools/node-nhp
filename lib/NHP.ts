@@ -7,6 +7,7 @@
 
 @include Set
 @include Add
+@include Map
 
 @include Exec
 @include JSON
@@ -31,6 +32,9 @@ class NHP {
 		},
 		"add": function(data) {
 			return new Add(data);
+		},
+		"map": function(data) {
+			return new Map(data);
 		},
 		
 		"exec": function(source) {

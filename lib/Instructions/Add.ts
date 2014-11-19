@@ -12,7 +12,7 @@ class Set implements Instruction {
 	constructor(input:String) {
 		var parts = input.match(syntax);
 		if(!parts)
-			throw new Error("Invalid <?Set sytnax");
+			throw new Error("Invalid <?add sytnax");
 		this._what = parts[2];
 		this._to = parts[1];
 		

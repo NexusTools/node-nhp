@@ -4,23 +4,25 @@
 @nodereq nulllogger:logger
 logger = logger("nhp");
 
-var syntax = /^([^\s]+)\s(.+)$/;
-class Set implements Instruction {
+var syntax = /^([^\s]+)\s([^\s]+)\s(.+)$/;
+class Map implements Instruction {
 	private _what:String;
-	private _to:String;
+	private _at:String;
+	private _with:String;
 	
 	constructor(input:String) {
 		var parts = input.match(syntax);
 		if(!parts)
-			throw new Error("Invalid <?set sytnax");
+			throw new Error("Invalid <?map sytnax");
 		this._what = parts[1];
-		this._to = parts[2];
+		this._at = parts[2];
+		this._with = parts[3];
 		
 		try {
-			vm.createScript("(" + this._to + ")"); // Verify it compiles
+			vm.createScript("(" + this._with + ")"); // Verify it compiles
 		} catch(e) {
 			logger.error(e);
-			throw new Error("Failed to compile source `" + this._to + "`");
+			throw new Error("Failed to compile with `" + this._with + "`");
 		}
 	}
 	
@@ -32,7 +34,7 @@ class Set implements Instruction {
 	}
 	
 	generateSource(stack):String {
-		return "try{__set(" + JSON.stringify(this._what) + ", " + this._to + ");__next();}catch(e){__out.write(__error(e));__next();};";
+		return "try{__map(" + JSON.stringify(this._what) + ", " + JSON.stringify(this._at) + ", " + this._with + ");__next();}catch(e){__out.write(__error(e));__next();};";
 	}
 	
 	run(runtime:Runtime, out:stream.Writable, callback:Function) {
@@ -44,4 +46,4 @@ class Set implements Instruction {
 	
 }
 
-@main Set
+@main Map

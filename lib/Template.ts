@@ -111,10 +111,11 @@ class Template extends events.EventEmitter {
 			};
 		} else {
 			vmc = vm.createContext();
+			
+			vmc.env = {};
 			_.extend(vmc, this._nhp.constants);
 			_.extend(vmc, context);
 			delete context;
-			vmc.env = {};
 			
 			var self = this;
 			vmc.__out = out;
@@ -157,6 +158,12 @@ class Template extends events.EventEmitter {
 			};
 			vmc.__set = function(what, to) {
 				vmc.env[what] = to;
+			};
+			vmc.__map = function(what, at, to) {
+				var map = vmc.env[what];
+				if(!_.isObject(map))
+					vmc.env[what] = map = {};
+				map[at] = to;
 			};
 			vmc.__get = function(what) {
 				return vmc.env[what];
