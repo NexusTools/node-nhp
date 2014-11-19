@@ -12,7 +12,7 @@
 logger = logger("nhp");
 
 class Template extends events.EventEmitter {
-	private static echoElements = /(title|body)/;
+	private static echoElements = /(title|body|error)/;
 	private static rawElements = /(textarea|script|style|pre)/;
 	private static $break = new Object();
 	
