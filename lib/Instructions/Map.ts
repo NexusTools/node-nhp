@@ -4,6 +4,7 @@
 @nodereq nulllogger:logger
 logger = logger("nhp");
 
+var short = /^([^\s]+)\s([^\s]+)\s*$/;
 var syntax = /^([^\s]+)\s([^\s]+)\s(.+)$/;
 class Map implements Instruction {
 	private _what:String;
@@ -12,8 +13,12 @@ class Map implements Instruction {
 	
 	constructor(input:String) {
 		var parts = input.match(syntax);
-		if(!parts)
-			throw new Error("Invalid <?map sytnax");
+		if(!parts) {
+			parts = input.match(short);
+			if(!parts)
+				throw new Error("Invalid <?map sytnax");
+			parts[3] = "{}";
+		}
 		this._what = parts[1];
 		this._at = parts[2];
 		this._with = parts[3];
