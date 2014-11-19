@@ -15,7 +15,6 @@
 @include MoustacheResolver
 @include Echo
 
-var Template = _typeinclude("Template");
 logger = logger("nhp");
 
 class Compiler {
@@ -147,7 +146,7 @@ class Compiler {
 							self._instructions.push(new Echo("<" + data + ">"));
 					} catch(e) {
 						logger.warning(e);
-						self._instructions.push(new Echo("<error>" + Template.encodeHTML(""+e) + "</error>"));
+						self._instructions.push(new Echo("<error>" + ("" + e).replace(["<", ">"], ["&lt;","&gt;"]) + "</error>"));
 					}
 				},
 				oncomment: function(data) {
