@@ -12,12 +12,9 @@
 logger = logger("nhp");
 
 class Template extends events.EventEmitter {
-	private static rawElements = [
-		"textarea",
-		"script",
-		"style",
-		"pre"
-	];
+	private static echoElements = /(title|body)/;
+	private static rawElements = /(textarea|script|style|pre)/;
+	private static $break = new Object();
 	
     private _nhp;
 	private _compiledScript;
@@ -134,17 +131,22 @@ class Template extends events.EventEmitter {
 				
 			if(this._nhp.options.tidyOutput) {
 				var realOut = out, parser;
-				var inTag = function(name) {
-					return parser._stack.indexOf(name) > -1;
+				var inTag = function(regex) {
+					try {
+						parser._stack.forEach(function(tag) {
+							if(regex.test(tag))
+								throw Template.$break;
+						});
+					} catch(e) {
+						if(e !== Template.$break)
+							throw e;
+						return true;
+					}
+					return false;
 				};
 				var self = this, tagCache = {};
 				var updateTagCache = function() {
-					tagCache.raw = false;
-					tagCache.body = inTag("body");
-					if(tagCache.body)
-						Template.rawElements.forEach(function(elem) {
-							tagCache.raw = tagCache.raw || inTag(elem);
-						});
+					tagCache.echo = (tagCache.raw = inTag(Template.rawElements)) || inTag(Template.echoElements);
 				};
 				var validComment;
 				var textTidyBuffer = "";
@@ -185,7 +187,7 @@ class Template extends events.EventEmitter {
 					ontext: function(text){
 						if(tagCache.raw)
 							realOut.write(text);
-						else if(tagCache.body)
+						else if(tagCache.echo)
 							textTidyBuffer += text;
 					},
 					onclosetag: function(name){
