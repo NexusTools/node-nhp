@@ -1,4 +1,4 @@
-@nodereq underscore:_
+@nodereq lodash:_
 @nodereq path
 
 @reference Instruction

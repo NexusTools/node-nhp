@@ -1,5 +1,5 @@
 @nodereq nulllogger:logger
-@nodereq underscore:_
+@nodereq lodash:_
 @nodereq htmlparser2
 @nodereq events
 @nodereq async
