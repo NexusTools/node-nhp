@@ -86,9 +86,9 @@ class NHP {
 		
         this.constants = constants || {};
         this.options = {};
-		_.extend(this.options, NHP.defaults);
+		_.merge(this.options, NHP.defaults);
 		if(options)
-			_.extend(this.options, options);
+			_.merge(this.options, options);
     }
 
 	public processingInstruction(name, data) {
@@ -122,7 +122,7 @@ class NHP {
     }
     
     public mixin(object:Object) {
-		_.extend(this.constants, object);
+		_.merge(this.constants, object);
     }
 
 	public template(filename:String) {
@@ -135,6 +135,17 @@ class NHP {
 		
 		return this.templates[filename];
 	}
+
+    private static __expressInst:NHP;
+    public static instance() {
+        if(!NHP.__expressInst)
+            return NHP.__expressInst = new NHP();
+        return NHP.__expressInst;
+    }
+
+    public static __express(path, options, callback) {
+        throw new Error("No idea where the documentation is on what options actually contains... once thats figured out this will work...");
+    }
     
 }
 

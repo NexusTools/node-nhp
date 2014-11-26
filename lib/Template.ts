@@ -124,8 +124,8 @@ class Template extends events.EventEmitter {
 			vmc = vm.createContext();
 			
 			vmc.env = {};
-			_.extend(vmc, this._nhp.constants);
-			_.extend(vmc, context);
+			_.merge(vmc, this._nhp.constants);
+			_.merge(vmc, context);
 			delete context;
 			
 				
@@ -210,7 +210,9 @@ class Template extends events.EventEmitter {
 					},
 					onerror: function(err) {
 						logger.warning(err);
-						realOut.end();
+                        callback(err);
+                        
+                        callback = null;
 					},
 					onend: function() {
 						realOut.end();
