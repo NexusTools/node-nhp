@@ -1,0 +1,5 @@
+<select>
+    <option>Entry 1</option>
+    <option selected="{{null}}">Entry 2</option>
+    <option selected="{{true}}">Entry 3</option>
+</select>

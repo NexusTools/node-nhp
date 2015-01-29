@@ -41,4 +41,23 @@ describe('api', function() {
 			done();
 		});
     });
+    it('compile false.nhp', function(done) {
+		template = nhp.template(path.resolve(__dirname, "false.nhp"));
+		template.on("compiled", done);
+		template.on("error", done);
+    });
+    it('test false.nhp', function(done) {
+		template.run({
+			platform: "nodejs",
+			name: false
+		}, process.stdout, function(err) {
+			if(err) {
+				done(err);
+				return;
+			}
+			
+			process.stdout.write("\n");
+			done();
+		});
+    });
 });

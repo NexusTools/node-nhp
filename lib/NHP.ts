@@ -25,6 +25,7 @@
 var extension = /\.\w+$/;
 class NHP {
 	private static defaults:Object = {
+        tidyAttribs: ["false", "null", "undefined"],
 		tidyComments: "not-if",
 		tidyOutput: true
 	}

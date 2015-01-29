@@ -128,8 +128,8 @@ class Template extends events.EventEmitter {
 			_.merge(vmc, context);
 			delete context;
 			
-				
-			if(this._nhp.options.tidyOutput) {
+            var options = this._nhp.options;
+			if(options.tidyOutput) {
 				var realOut = out, parser;
 				var inTag = function(regex) {
 					try {
@@ -150,8 +150,8 @@ class Template extends events.EventEmitter {
 				};
 				var validComment;
 				var textTidyBuffer = "";
-				if(this._nhp.options.tidyComments) {
-					if(this._nhp.options.tidyComments == "not-if")
+				if(options.tidyComments) {
+					if(options.tidyComments == "not-if")
 						validComment = /^\[if .+$/;
 					else
 						validComment = false;
@@ -177,8 +177,13 @@ class Template extends events.EventEmitter {
 						updateTagCache();
 						
 						realOut.write("<" + name);
-						for(var key in attribs)
-							realOut.write(" " + key + "=\"" + attribs[key] + "\"");
+						for(var key in attribs) {
+                            var value = attribs[key];
+                            if(options.tidyAttribs.indexOf(value) > -1)
+                                continue;
+                            
+							realOut.write(" " + key + "=\"" + value + "\"");
+                        }
 						if(Compiler.isVoidElement(name))
 							realOut.write(" />");
 						else
