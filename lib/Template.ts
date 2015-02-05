@@ -36,9 +36,10 @@ class Template extends events.EventEmitter {
     }
 
  	public static encodeHTML(html:String, attr:boolean) {
-		html = html.replace(["<", ">"], ["&lt;","&gt;"]);
+		html = html.replace(/</g, "&lt;");
+		html = html.replace(/>/g, "&gt;");
 		if(attr)
-			return html.replace("\"", "&quot;");
+			return html.replace(/"/g, "&quot;");
 		return html;
 	}
  

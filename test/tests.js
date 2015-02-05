@@ -30,6 +30,7 @@ describe('api', function() {
 				"Cat",
 				"Cow"
 			],
+            html: "<textarea></textarea>",
 			name: false
 		}, process.stdout, function(err) {
 			if(err) {

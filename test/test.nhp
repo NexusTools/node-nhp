@@ -8,7 +8,8 @@
 <?else?>
 	<?set type "Driver 6002"?>
 <?endif?>
-		
+
+    {{html}}
 <button onclick='alert("Test")'></button>
 
 	<a href="http://something/{{{env.type}}}">{{type}}</a>
