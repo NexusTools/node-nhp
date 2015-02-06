@@ -303,7 +303,9 @@ class Template extends events.EventEmitter {
 
 				var template = self._nhp.template(path.resolve(self._dirname, file));
 				if(template.isCompiled())
-					template.run(vmc, out, callback, true);
+                    process.nextTick(function() {
+					   template.run(vmc, out, callback, true);
+                    });
 				else {
 					template.once("compiled", function() {
 						template.run(vmc, out, callback, true);
