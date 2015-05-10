@@ -2,10 +2,10 @@
 	"name": "nhp",
 	"author": "NexusTools",
 	"homepage": "https://www.nexustools.net/projects#nhp",
-	"version": "0.4.8",
+	"version": "0.4.9",
 	"licenses": [
 		{
-			"type": "Apache License 2.0", 
+			"type": "Apache License 2.0",
 			"url": "http://www.apache.org/licenses/LICENSE-2.0.html"
 		}
 	],
@@ -30,24 +30,24 @@
 	"scripts": {
 		"test": "mocha --timeout 10000 --require test/support/env --reporter spec --globals __typeinclude__ --check-leaks test/",
 		"test-travis": "istanbul cover node_modules/mocha/bin/_mocha --report lcovonly --  --timeout 20000 --require test/support/env --reporter spec --globals __typeinclude__ --check-leaks test/",
-        "postinstall": "tscac"
+		"postinstall": "tscac || true"
 	},
-    "preferGlobal": true,
+  "preferGlobal": true,
 	"typesource": "lib",
 	"main" : "index.js",
 	"engines" : {
 		"node": ">=0.10.16",
-        "npm": ">=1.3.8"
+    "npm": ">=1.3.8"
 	},
 	"dependencies": {
-		"async": "latest",
-		"lodash": "latest",
-		"htmlparser2": "latest",
-		"typeinclude": ">=0.5.9",
-		"nulllogger": ">=0.2.3"
+		"async": "~0.9.0",
+		"lodash": "~3.8.0",
+		"htmlparser2": "~3.8.2",
+		"nulllogger": "~0.2.4",
+		"typeinclude": "~0.6.0"
 	},
 	"devDependencies": {
-		"istanbul": "0.3.2",
-    	"mocha": "~1.21.4"
+		"istanbul": "~0.3.13",
+    "mocha": "~2.2.4"
 	}
 }
