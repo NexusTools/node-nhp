@@ -1,6 +1,6 @@
 @nodereq htmlparser2
 @nodereq nulllogger:logger
-@nodereq underscore:_
+@nodereq lodash:_
 @nodereq domain
 @nodereq stream
 @nodereq async
@@ -60,7 +60,7 @@ class Compiler {
 	public static isVoidElement(el) {
 		return Compiler.voidElements.indexOf(el) > -1;
 	}
-    
+
     constructor(nhp) {
         this._nhp = nhp;
     }
@@ -80,12 +80,12 @@ class Compiler {
 			}
 			if(end < 0)
 				break; // No end, just output the malformed code...
-			
+
 			if(next > at) {
 				var data = text.substring(next, at);
     			compiler._instructions.push(new Echo(data.replace('"', "&quote;")));
 			}
-			
+
 			var moustache = text.substring(next+size, end);
 			if(Compiler.resolverRegex.test(moustache))
     			compiler._instructions.push(new MoustacheResolver(moustache.substring(1), attrib, raw));
@@ -96,7 +96,7 @@ class Compiler {
 		if(at < text.length)
     		compiler._instructions.push(new Echo(text.substring(at)));
 	}
-    
+
     public compile(source:String, callback:Function) {
 		var self = this;
 		var d = domain.create();
@@ -107,7 +107,7 @@ class Compiler {
 				throw "Source must be a readable stream or a string";
 			else
 				d.add(source);
-			
+
 			var parser = new htmlparser2.Parser({
 				onopentag: function(name, attribs){
 					logger.gears("onopentag", arguments);
@@ -192,7 +192,7 @@ class Compiler {
 			pop: function() {
 				if(stack.length < 2)
 					throw new Error("Cannot pop anymore frames from the stack...");
-				
+
 				stack.pop();
 				stack[stack.length-1].popped = true;
 			}
@@ -200,10 +200,10 @@ class Compiler {
 		var source = "__series([";
 		this._instructions.forEach(function(instruction) {
 			logger.gears(instruction.constructor.name);
-			
+
 			var instructionSource = instruction.generateSource(stackControl);
 			var frame = stack[stack.length-1];
-			
+
 			if(!frame.popped) {
 				if(frame.first)
 					frame.first = false;
@@ -212,7 +212,7 @@ class Compiler {
 			}
 			if(frame.pushed)
 				frame.first = true;
-			
+
 			if(!frame.popped)
 				source += "function(__next){";
 			else
@@ -226,7 +226,7 @@ class Compiler {
 		source += "], __done);";
 		return source;
 	}
-	
+
 	public optimize(constants:any, callback:Function) {
 		var cBuffer = "";
 		var optimized = [];
@@ -246,7 +246,7 @@ class Compiler {
 		this._instructions = optimized;
 		callback();
 	}
-    
+
 }
 
 @main Compiler
