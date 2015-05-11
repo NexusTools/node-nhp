@@ -44,9 +44,10 @@
 		"lodash": "~3.8.0",
 		"htmlparser2": "~3.8.2",
 		"nulllogger": "~0.2.4",
-		"typeinclude": "~0.6.1"
+		"typeinclude": "~0.6.2"
 	},
 	"devDependencies": {
+		"typescript" : "~1.4.1",
 		"istanbul": "~0.3.13",
     "mocha": "~2.2.4"
 	}
