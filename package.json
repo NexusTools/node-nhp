@@ -29,8 +29,7 @@
 	},
 	"scripts": {
 		"test": "mocha --timeout 10000 --require test/support/env --reporter spec --globals __typeinclude__ --check-leaks test/",
-		"test-travis": "istanbul cover node_modules/mocha/bin/_mocha --report lcovonly --  --timeout 100000 --require test/support/env --reporter spec --globals __typeinclude__ --check-leaks test/",
-		"postinstall": "tscac || true"
+		"test-travis": "istanbul cover node_modules/mocha/bin/_mocha --report lcovonly --  --timeout 100000 --require test/support/env --reporter spec --globals __typeinclude__ --check-leaks test/"
 	},
   "preferGlobal": true,
 	"typesource": "lib",
