@@ -1,53 +1,53 @@
 {
-	"name": "nhp",
-	"author": "NexusTools",
-	"homepage": "https://www.nexustools.net/projects#nhp",
-	"version": "0.5.0",
-	"licenses": [
-		{
-			"type": "Apache License 2.0",
-			"url": "http://www.apache.org/licenses/LICENSE-2.0.html"
-		}
-	],
-	"description": "nhp is a html templating language which uses the moustache syntax, and tags similar to php for methods.",
-	"keywords": [
-		"nhp",
-		"html",
-		"nosejs",
-		"template",
-		"NexusTools",
-		"integration",
-		"compiler",
-		"language"
-	],
-	"bugs": {
-		"url" : "https://github.com/NexusTools/node-nhp/issues"
-	},
-	"repository" : {
-		"type" : "git",
-		"url" : "https://github.com/NexusTools/node-nhp.git"
-	},
-	"scripts": {
-		"test": "mocha --timeout 40000 --require test/support/env --reporter spec --globals __typeinclude__ --check-leaks test/",
-		"test-travis": "istanbul cover node_modules/mocha/bin/_mocha --report lcovonly --  --timeout 100000 --require test/support/env --reporter spec --globals __typeinclude__ --check-leaks test/"
-	},
-  "preferGlobal": true,
-	"typesource": "lib",
-	"main" : "index.js",
-	"engines" : {
-		"node": ">=0.10.16",
-    "npm": ">=1.3.8"
-	},
-	"dependencies": {
-		"async": "~0.9.0",
-		"lodash": "~3.8.0",
-		"htmlparser2": "~3.8.2",
-		"nulllogger": "~0.2.4",
-		"typeinclude": "~0.6.3"
-	},
-	"devDependencies": {
-		"typescript" : "~1.4.1",
-		"istanbul": "~0.3.13",
-    "mocha": "~2.2.4"
-	}
+    "name": "nhp",
+    "author": "NexusTools",
+    "homepage": "https://www.nexustools.net/projects#nhp",
+    "version": "0.5.1",
+    "licenses": [
+        {
+            "type": "Apache License 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        }
+    ],
+    "description": "nhp is a html templating language which uses the moustache syntax, and tags similar to php for methods.",
+    "keywords": [
+        "nhp",
+        "html",
+        "nosejs",
+        "template",
+        "NexusTools",
+        "integration",
+        "compiler",
+        "language"
+    ],
+    "bugs": {
+        "url": "https://github.com/NexusTools/node-nhp/issues"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/NexusTools/node-nhp.git"
+    },
+    "scripts": {
+        "test": "mocha --timeout 40000 --require test/support/env --reporter spec --globals __typeinclude__ --check-leaks test/",
+        "test-travis": "istanbul cover node_modules/mocha/bin/_mocha --report lcovonly --  --timeout 100000 --require test/support/env --reporter spec --globals __typeinclude__ --check-leaks test/"
+    },
+    "preferGlobal": true,
+    "typesource": "lib",
+    "main": "index.js",
+    "engines": {
+        "node": ">=0.10.16",
+        "npm": ">=1.3.8"
+    },
+    "dependencies": {
+        "async": "^1.5.0",
+        "lodash": "^4.13.1",
+        "nulllogger": "^0.2.4",
+        "htmlparser2": "^3.9.0",
+        "typeinclude": "^0.6.4"
+    },
+    "devDependencies": {
+        "typescript": "~1.4.1",
+        "istanbul": "~0.3.13",
+        "mocha": "~2.2.4"
+    }
 }

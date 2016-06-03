@@ -1,5 +1,6 @@
 /node_modules
 /typeinclude-cache
+/nbproject
 /coverage
 /test
 /temp

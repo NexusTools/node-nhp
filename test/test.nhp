@@ -10,7 +10,7 @@
 <?endif?>
 
     {{html}}
-<button onclick='alert("Test")'></button>
+<button onclick="alert('Test')"></button>
 
 	<a href="http://something/{{{env.type}}}">{{type}}</a>
 <ul><?include "entries"?></ul>
