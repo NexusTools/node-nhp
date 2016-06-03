@@ -35,7 +35,7 @@
     "typesource": "lib",
     "main": "index.js",
     "engines": {
-        "node": ">=0.10.16",
+        "node": ">=0.11.12",
         "npm": ">=1.3.8"
     },
     "dependencies": {
