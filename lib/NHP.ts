@@ -24,122 +24,122 @@
 
 var extension = /\.\w+$/;
 class NHP {
-	private static defaults:Object = {
+    private static defaults: Object = {
         tidyAttribs: ["false", "null", "undefined"],
-		tidyComments: "not-if",
-		tidyOutput: true
-	}
-	
-    private options:Object;
-    private constants:Object;
-	private templates:Array<Template> = {};
-	private processors = {
-		"set": function(data) {
-			return new Set(data);
-		},
-		"add": function(data) {
-			return new Add(data);
-		},
-		"map": function(data) {
-			return new Map(data);
-		},
-		
-		"exec": function(source) {
-			return new Exec(source);
-		},
-		"json": function(source) {
-			return new JSON(source);
-		},
-		
-		"each": function(data) {
-			return new Each(data);
-		},
-		"done": function() {
-			return new Done();
-		},
-		
-		"if": function(condition) {
-			return new If(condition);
-		},
-		"elseif": function(condition) {
-			return new ElseIf(condition);
-		},
-		"else": function() {
-			return new Else();
-		},
-		"endif": function() {
-			return new EndIf();
-		},
-		
-		"include": function(file) {
-			return new Include(file);
-		}
-	};
-	private resolvers = {};
-    
-    public static create(constants:Object) {
+        tidyComments: "not-if",
+        tidyOutput: true
+    }
+
+    private options: Object;
+    private constants: Object;
+    private templates: Array<Template> = {};
+    private processors = {
+        "set": function(data) {
+            return new Set(data);
+        },
+        "add": function(data) {
+            return new Add(data);
+        },
+        "map": function(data) {
+            return new Map(data);
+        },
+
+        "exec": function(source) {
+            return new Exec(source);
+        },
+        "json": function(source) {
+            return new JSON(source);
+        },
+
+        "each": function(data) {
+            return new Each(data);
+        },
+        "done": function() {
+            return new Done();
+        },
+
+        "if": function(condition) {
+            return new If(condition);
+        },
+        "elseif": function(condition) {
+            return new ElseIf(condition);
+        },
+        "else": function() {
+            return new Else();
+        },
+        "endif": function() {
+            return new EndIf();
+        },
+
+        "include": function(file) {
+            return new Include(file);
+        }
+    };
+    private resolvers = {};
+
+    public static create(constants: Object) {
         return new NHP(constants);
     }
-    
-    public constructor(constants:Object, options:Object) {
-		if(!(this instanceof NHP))
-			return new NHP(constants);
-		
+
+    public constructor(constants: Object, options: Object) {
+        if (!(this instanceof NHP))
+            return new NHP(constants);
+
         this.constants = constants || {};
         this.options = {};
-		_.merge(this.options, NHP.defaults);
-		if(options)
-			_.merge(this.options, options);
+        _.merge(this.options, NHP.defaults);
+        if (options)
+            _.merge(this.options, options);
     }
 
-	public processingInstruction(name, data) {
-		if(!(name in this.processors))
-			throw new Error("No processor found with name `" + name + "`");
-		return this.processors[name](data);
-	}
+    public processingInstruction(name, data) {
+        if (!(name in this.processors))
+            throw new Error("No processor found with name `" + name + "`");
+        return this.processors[name](data);
+    }
 
-	public resolver(name:String):Resolver {
-		if(!(name in this.resolvers))
-			throw new Error("No resolver found with name `" + name + "`");
-		return this.resolvers[name];
-	}
+    public resolver(name: String): Resolver {
+        if (!(name in this.resolvers))
+            throw new Error("No resolver found with name `" + name + "`");
+        return this.resolvers[name];
+    }
 
-	public installResolver(name:String, resolver:Function/* => (calllback:Function => (err, value))*/) {
-		this.resolvers[name] = resolver;
-	}
+    public installResolver(name: String, resolver: Function/* => (calllback:Function => (err, value))*/) {
+        this.resolvers[name] = resolver;
+    }
 
     public setConstant(name, value) {
-        if(this.hasConstant(name))
+        if (this.hasConstant(name))
             throw new Error("Cannot redefine constants", name, value);
         this.constants[name] = value;
     }
-    
+
     public hasConstant(name) {
         return name in this.constants;
     }
-    
+
     public getConstant(name) {
         return this.constants[name];
     }
-    
-    public mixin(object:Object) {
-		_.merge(this.constants, object);
+
+    public mixin(object: Object) {
+        _.merge(this.constants, object);
     }
 
-	public template(filename:String) {
-		if(!extension.test(filename))
-			filename += ".nhp";
-		filename = path.resolve(filename);
-		
-		if(!(filename in this.templates))
-			return this.templates[filename] = new Template(filename, this);
-		
-		return this.templates[filename];
-	}
+    public template(filename: String) {
+        if (!extension.test(filename))
+            filename += ".nhp";
+        filename = path.resolve(filename);
 
-    private static __expressInst:NHP;
+        if (!(filename in this.templates))
+            return this.templates[filename] = new Template(filename, this);
+
+        return this.templates[filename];
+    }
+
+    private static __expressInst: NHP;
     public static instance() {
-        if(!NHP.__expressInst)
+        if (!NHP.__expressInst)
             return NHP.__expressInst = new NHP();
         return NHP.__expressInst;
     }
@@ -147,7 +147,7 @@ class NHP {
     public static __express(path, options, callback) {
         throw new Error("No idea where the documentation is on what options actually contains... once thats figured out this will work...");
     }
-    
+
 }
 
 @main NHP
