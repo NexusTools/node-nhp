@@ -5,7 +5,14 @@
 @nodereq async
 @nodereq path
 @nodereq fs
-@nodereq vm
+
+var vm;
+var USE_VM = process.env.USE_VM !== undefined;
+if(USE_VM) {
+	logger.warn("Using NodeJS VM");
+	vm = require("vm");
+}
+var IGNORED_KEYWORDS = ['JSON', 'Array', 'Date', 'let', 'class', 'const', 'break', 'case', 'catch', 'continue', 'debugger', 'default', 'delete', 'do', 'else', 'false', 'finally', 'for', 'function', 'if', 'in', 'instanceof', 'new', 'null', 'return', 'switch', 'this', 'throw', 'true', 'try', 'typeof', 'var', 'void', 'while', 'with'];
 
 @include Compiler
 
@@ -80,7 +87,31 @@ class Template extends events.EventEmitter {
 
                             self._source = ""+self._compiler.generateSource();
                             logger.debug("Generated source code", this._filename, self._source);
-                            self._compiledScript = vm.createScript(self._source, self._filename);
+							if(USE_VM)
+								self._compiledScript = vm.createScript(self._source, self._filename);
+							else {
+								var match, inquote, variables = [];
+								var reg = /(["']|(^|\b)([$A-Z_][0-9A-Z_$]*)(\\.[$A-Z_][0-9A-Z_$]*)*(\b|$))/gi;
+								while(match = reg.exec(self._source)) {
+									if(inquote && inquote == match[0])
+										inquote = false;
+									else if(match[0] == "\"" || match[0] == "'")
+										inquote = match[0];
+									else if(variables.indexOf(match[1]) == -1 &&
+											IGNORED_KEYWORDS.indexOf(match[1]) == -1)
+										variables.push(match[1]);
+								}
+								
+								var modifiedSource = "(function(vmc) {"
+								variables.forEach(function(variable) {
+									modifiedSource += "var " + variable + " = vmc." + variable + ";";
+								});
+								modifiedSource += self._source + "})";
+								
+								self._compiledScript = {
+									runInContext: eval(modifiedSource)
+								};
+							}
 
                             if (firstTime)
                                 self.emit("compiled");
@@ -89,7 +120,7 @@ class Template extends events.EventEmitter {
                             logger.gears("Compiled", self._filename);
                             delete self._compiler
                         } catch (e) {
-                            logger.error("Failed to compile", self._filename, source, e);
+                            logger.error("Failed to compile", self._filename, self._source, e);
                             self.emit("error", e);
                         }
                     });
@@ -126,7 +157,7 @@ class Template extends events.EventEmitter {
                 }
             };
         } else {
-            vmc = vm.createContext();
+            vmc = USE_VM ? vm.createContext() : {};
 
             vmc.env = {};
             _.merge(vmc, this._nhp.constants);
