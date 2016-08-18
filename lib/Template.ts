@@ -90,16 +90,23 @@ class Template extends events.EventEmitter {
 							if(USE_VM)
 								self._compiledScript = vm.createScript(self._source, self._filename);
 							else {
-								var match, inquote, variables = [];
-								var reg = /(["']|(^|\b)([$A-Z_][0-9A-Z_$]*)(\\.[$A-Z_][0-9A-Z_$]*)*(\b|$))/gi;
+								var match:any, inquote:any = false, variables:Array<String> = [];
+								var reg = /(\\?["']|(^|\b)([$A-Z_][0-9A-Z_$]*)(\.[$A-Z_][0-9A-Z_$]*)*(\b|$))/gi;
 								while(match = reg.exec(self._source)) {
-									if(inquote && inquote == match[0])
-										inquote = false;
-									else if(match[0] == "\"" || match[0] == "'")
+									if(inquote) {
+										if(match[0] == "\\\"" || match[0] == "\\'")
+											continue;
+										if(inquote == match[0])
+											inquote = false;
+										else
+											continue;
+									} else if(match[0] == "\"" || match[0] == "'")
 										inquote = match[0];
-									else if(variables.indexOf(match[1]) == -1 &&
-											IGNORED_KEYWORDS.indexOf(match[1]) == -1)
-										variables.push(match[1]);
+									else if(variables.indexOf(match[3]) == -1 &&
+											IGNORED_KEYWORDS.indexOf(match[3]) == -1)
+										variables.push(match[3]);
+									else
+										continue;
 								}
 								
 								var modifiedSource = "(function(vmc) {"
@@ -107,7 +114,6 @@ class Template extends events.EventEmitter {
 									modifiedSource += "var " + variable + " = vmc." + variable + ";";
 								});
 								modifiedSource += self._source + "})";
-								
 								self._compiledScript = {
 									runInContext: eval(modifiedSource)
 								};
@@ -139,7 +145,7 @@ class Template extends events.EventEmitter {
         }
     }
 
-    public run(context, out: stream.Writable, callback, contextIsVMC) {
+    public run(context:Object, out: stream.Writable, callback:Function, contextIsVMC:boolean) {
         if (!this._compiledScript)
             throw new Error("Not compiled yet");
         if (this._compiledScript instanceof Error)
@@ -157,13 +163,11 @@ class Template extends events.EventEmitter {
                 }
             };
         } else {
-            vmc = USE_VM ? vm.createContext() : {};
-
-            vmc.env = {};
+			vmc = USE_VM ? vm.createContext() : {};
             _.merge(vmc, this._nhp.constants);
-            _.merge(vmc, context);
-            delete context;
+            vmc.env = {};
 
+            var self = this;
             var options = this._nhp.options;
             if (options.tidyOutput) {
                 var realOut = out, parser;
@@ -180,7 +184,7 @@ class Template extends events.EventEmitter {
                     }
                     return false;
                 };
-                var self = this, tagCache = {};
+				var tagCache = {};
                 var updateTagCache = function() {
                     tagCache.echo = (tagCache.raw = inTag(Template.rawElements)) || inTag(Template.echoElements);
                 };
@@ -195,12 +199,12 @@ class Template extends events.EventEmitter {
                     validComment = /.+/;
                 var endsInSpace = /^.*\s$/, startsWithSpace = /^\s.*$/, endSpace = true;
                 var dumpBuffer = function() {
-                    if (textTidyBuffer.length > 0) {
+                    if (textTidyBuffer) {
                         textTidyBuffer = textTidyBuffer.replace(/\s+/gm, " ");
                         var _endSpace = endsInSpace.test(textTidyBuffer);
                         if (endSpace && startsWithSpace.test(textTidyBuffer))
                             textTidyBuffer = textTidyBuffer.substring(1);
-                        if (textTidyBuffer.length > 0) {
+                        if (textTidyBuffer) {
                             realOut.write(textTidyBuffer);
                             textTidyBuffer = "";
                         }
@@ -228,7 +232,7 @@ class Template extends events.EventEmitter {
                     ontext: function(text) {
                         if (tagCache.raw)
                             realOut.write(text);
-                        else if (tagCache.echo)
+                        else
                             textTidyBuffer += text;
                     },
                     onclosetag: function(name) {
@@ -252,7 +256,6 @@ class Template extends events.EventEmitter {
                     onerror: function(err) {
                         logger.warning(err);
                         callback(err);
-
                         callback = null;
                     },
                     onend: function() {
@@ -262,6 +265,9 @@ class Template extends events.EventEmitter {
             } else
                 vmc.__out = out;
             vmc._ = _;
+			vmc.__ = function(text:String):String {
+				return text;
+			};
             vmc.__done = callback;
             vmc.__series = async.series;
             vmc.__dirname = this._dirname;
@@ -366,6 +372,7 @@ class Template extends events.EventEmitter {
                     return data;
                 return Template.encodeHTML(data);
             }
+            _.merge(vmc, context);
         }
         this._compiledScript.runInContext(vmc);
     }

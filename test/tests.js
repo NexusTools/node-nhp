@@ -61,4 +61,21 @@ describe('api', function() {
 			done();
 		});
     });
+    it('translate false.nhp', function(done) {
+		template.run({
+			__: function(text) {
+				return text.replace(/Entry/ig, "Soup");
+			},
+			platform: "nodejs",
+			name: false
+		}, process.stdout, function(err) {
+			if(err) {
+				done(err);
+				return;
+			}
+			
+			process.stdout.write("\n");
+			done();
+		});
+    });
 });

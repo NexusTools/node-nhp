@@ -13,6 +13,7 @@
 // Instructions
 @include Moustache
 @include MoustacheResolver
+@include Translate
 @include Echo
 
 logger = logger("nhp");
@@ -65,7 +66,7 @@ class Compiler {
         this._nhp = nhp;
     }
 
-    private static compileText(text: String, compiler, attrib: boolean = false) {
+    private static compileText(text: String, compiler: Compiler, attrib: boolean = false) {
         var at = 0, next;
         while ((next = text.indexOf("{{", at)) > -1) {
             var size;
@@ -94,7 +95,7 @@ class Compiler {
             at = end + size;
         }
         if (at < text.length)
-            compiler._instructions.push(new Echo(text.substring(at)));
+            compiler._instructions.push(attrib ? new Echo(text.substring(at)) : new Translate(text.substring(at)));
     }
 
     public compile(source: String, callback: Function) {

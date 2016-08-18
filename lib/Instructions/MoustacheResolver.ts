@@ -5,8 +5,11 @@
 
 class MoustacheResolver implements Instruction {
 	private _key:String;
+	private _source:String;
+	private _attrib:boolean;
+	private _raw:boolean;
 	
-	constructor(key:String) {
+	constructor(key:String, attrib:boolean, raw:boolean) {
 		this._key = key;
 	}
 	
