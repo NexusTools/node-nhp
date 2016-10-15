@@ -3,12 +3,12 @@
     "definitionFilename": "index.d.ts",
     "libraryDependencies": [],
     "moduleDependencies": [],
-    "libraryMajorVersion": "3",
+    "libraryMajorVersion": "7",
     "libraryMinorVersion": "0",
-    "libraryName": "NullLogger 3.0",
-    "typingsPackageName": "nulllogger",
+    "libraryName": "NHP 7.0",
+    "typingsPackageName": "nhp",
     "declaredModules": [
-        "nulllogger"
+        "nhp"
     ],
     "files": [
         "index.d.ts"
