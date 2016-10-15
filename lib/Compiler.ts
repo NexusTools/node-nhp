@@ -1,28 +1,30 @@
-@nodereq htmlparser2
-@nodereq nulllogger:logger
-@nodereq lodash:_
-@nodereq domain
-@nodereq stream
-@nodereq async
-@nodereq fs
+/// <reference path="../node_modules/@types/node/index.d.ts" />
 
-@reference Instruction
+import htmlparser2 = require("htmlparser2");
+import log = require("nulllogger");
+import domain = require("domain");
+import stream = require("stream");
+import async = require("async");
+import _ = require("lodash");
+import fs = require("fs");
 
-@include Runtime
+import {Instruction} from "./Instruction"
+import {Runtime} from "./Runtime"
+import {NHP} from "./NHP"
 
 // Instructions
-@include Moustache
-@include MoustacheResolver
-@include Translate
-@include Echo
+import {Moustache} from "./Instructions/Moustache"
+import {MoustacheResolver} from "./Instructions/MoustacheResolver"
+import {Translate} from "./Instructions/Translate"
+import {Echo} from "./Instructions/Echo"
 
-logger = logger("nhp");
+var logger = log("nhp");
 
-class Compiler {
+export class Compiler {
     private static resolverRegex = /^\#/;
     private static logicRegex = /^\?.+\?$/;
-    private _instructions: Array<Instruction> = [];
-    private _nhp;
+    _instructions: Array<Instruction> = [];
+    private _nhp:NHP;
 
     // https://github.com/fb55/htmlparser2/blob/748d3da71dc664afb8357aabfe6c4a6f74644a0e/lib/Parser.js#L59
     private static voidElements = [
@@ -58,19 +60,19 @@ class Compiler {
         "polygone"
     ];
 
-    public static isVoidElement(el) {
+    public static isVoidElement(el:string) {
         return Compiler.voidElements.indexOf(el) > -1;
     }
 
-    constructor(nhp) {
+    constructor(nhp:NHP) {
         this._nhp = nhp;
     }
 
-    private static compileText(text: String, compiler: Compiler, attrib: boolean = false) {
-        var at = 0, next;
+    private static compileText(text: string, compiler: Compiler, attrib: boolean = false) {
+        var at = 0, next:number;
         while ((next = text.indexOf("{{", at)) > -1) {
-            var size;
-            var raw;
+            var size:number;
+            var raw:boolean;
             var end = -1;
             if (text.substring(next + 2, next + 3) == "{") {
                 end = text.indexOf("}}}", next + (size = 3));
@@ -98,18 +100,35 @@ class Compiler {
             compiler._instructions.push(attrib ? new Echo(text.substring(at)) : new Translate(text.substring(at)));
     }
 
-    public compile(source: String, callback: Function) {
+	private cancelActive:Function;
+    public compile(source:any, callback: Function) {
+		try {
+			this.cancelActive();
+		} catch(e){}
+		var self = this;
+		var parser:htmlparser2.Parser;
+		var cancelled:boolean = false;
+		this.cancelActive = function() {
+			cancelled = true;
+			try {
+				source.unpipe(parser);
+			} catch(e) {}
+			callback = function(){}
+			self.cancelActive = null;
+		}
         var self = this;
         var d = domain.create();
         d.run(function() {
-            if (_.isString(source))
-                source = new stream.Buffer(source);
-            else if (!(source instanceof stream.Readable))
+            if (_.isString(source)) {
+				var nsource = new stream.Readable;
+				nsource.push(source);
+				nsource.push(null);
+				source = nsource;
+			} else if (!(source instanceof stream.Readable))
                 throw "Source must be a readable stream or a string";
-            else
-                d.add(source);
+            d.add(source);
 
-            var parser = new htmlparser2.Parser({
+            parser = new htmlparser2.Parser({
                 onopentag: function(name, attribs) {
                     logger.gears("onopentag", arguments);
 
@@ -149,7 +168,7 @@ class Compiler {
                             self._instructions.push(new Echo("<" + data + ">"));
                     } catch (e) {
                         logger.warning(e);
-                        self._instructions.push(new Echo("<error>" + ("" + e).replace(["<", ">"], ["&lt;", "&gt;"]) + "</error>"));
+                        self._instructions.push(new Echo("<error>" + ("" + e).replace("<", "&lt;").replace(">", "&gt;") + "</error>"));
                     }
                 },
                 oncomment: function(data) {
@@ -168,18 +187,21 @@ class Compiler {
                     callback();
                 }
             });
-            d.on("error", function(err) {
+            d.on("error", function(err:Error) {
                 logger.warning(err);
                 source.unpipe(parser);
                 callback(err);
             });
-            source.pipe(parser);
+			if(!cancelled)
+				source.pipe(parser);
         });
     }
 
     public generateSource() {
-        var stack = [{
-            first: true
+        var stack:[{first:boolean,popped:boolean,pushed:boolean}] = [{
+            first: true,
+			popped: false,
+			pushed: false
         }];
         var stackControl = {
             push: function() {
@@ -199,10 +221,8 @@ class Compiler {
             }
         };
         var source = "__series([";
-        this._instructions.forEach(function(instruction) {
-            logger.gears(instruction.constructor.name);
-
-            var instructionSource = instruction.generateSource(stackControl);
+        this._instructions.forEach(function(instruction:Instruction) {
+			var instructionSource = instruction.generateSource(stackControl);
             var frame = stack[stack.length - 1];
 
             if (!frame.popped) {
@@ -230,7 +250,7 @@ class Compiler {
 
     public optimize(constants: any, callback: Function) {
         var cBuffer = "";
-        var optimized = [];
+        var optimized:Array<Instruction> = [];
         this._instructions.forEach(function(instruction) {
             if (instruction instanceof Echo)
                 cBuffer += instruction._data;
@@ -248,6 +268,10 @@ class Compiler {
         callback();
     }
 
-}
+	public cancel() {
+		try {
+			this.cancelActive();
+		} catch(e) {}
+	}
 
-@main Compiler
+}

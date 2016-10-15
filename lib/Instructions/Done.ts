@@ -1,18 +1,24 @@
-@reference Instruction
+/// <reference path="../../node_modules/@types/node/index.d.ts" />
+import {Instruction} from "../Instruction";
+import {Runtime} from "../Runtime"
 
-class Done implements Instruction {
+import stream = require("stream")
+
+export class Done implements Instruction {
 	constructor() {}
 	
-	save():String {}
+	save():string {
+		return "";
+	}
 	
-	load(data:String) {}
+	load(data:string) {}
 	
-	process(source:String) {
+	process(source:string) {
 		throw new Error("This instruction can't process data");
 	}
 	
-	generateSource(stack):String {
-		stack.pop();
+	generateSource(stackControl:{push:Function, pop:Function}):string {
+		stackControl.pop();
 		return "], __next);}, __next);}catch(e){__out.write(__error(e));__next();};";
 	}
 	
@@ -24,5 +30,3 @@ class Done implements Instruction {
 	}
 	
 }
-
-@main Done

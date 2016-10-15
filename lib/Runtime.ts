@@ -1,10 +1,10 @@
-@nodereq vm
-@nodereq async
-@nodereq stream
+/// <reference path="../node_modules/@types/node/index.d.ts" />
+import vm = require("vm");
+import stream = require("stream");
 
-@reference Instruction
+import {Instruction} from "./Instruction";
 
-class Runtime {
+export class Runtime {
     private _instructions: Array<Instruction>;
     private _context: any;
 
@@ -62,5 +62,3 @@ class Runtime {
     }
 
 }
-
-@main Runtime

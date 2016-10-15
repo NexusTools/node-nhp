@@ -1,15 +1,18 @@
-@reference Instruction
+/// <reference path="../../node_modules/@types/node/index.d.ts" />
+import {Instruction} from "../Instruction";
+import {Runtime} from "../Runtime"
 
-@nodereq vm
-@nodereq nulllogger:logger
-logger = logger("nhp");
+import log = require("nulllogger");
+import stream = require("stream");
 
-class Each implements Instruction {
-	private _eachOf:String;
+var logger = log("nhp");
+
+export class Each implements Instruction {
+	private _eachOf:string;
 	
-	constructor(eachOf:String) {
+	constructor(eachOf:string) {
 		try {
-			vm.createScript("(" + eachOf + ")"); // Verify it compiles
+			eval("(function(){return " + eachOf + ";})"); // Verify it compiles
 		} catch(e) {
 			logger.error(e);
 			throw new Error("Failed to compile eachOf `" + eachOf + "`");
@@ -18,16 +21,20 @@ class Each implements Instruction {
 		this._eachOf = eachOf;
 	}
 	
-	save():String {}
+	save():string {
+		return this._eachOf;
+	}
 	
-	load(data:String) {}
+	load(data:string) {
+		this._eachOf = data;
+	}
 	
 	process(source:String) {
 		throw new Error("This instruction can't process data");
 	}
 	
-	generateSource(stack):String {
-		stack.push();
+	generateSource(stackControl:{push:Function, pop:Function}):string {
+		stackControl.push();
 		return "try{__each(" + this._eachOf + ", function(entry, __next) {__series([";
 	}
 	
@@ -39,5 +46,3 @@ class Each implements Instruction {
 	}
 	
 }
-
-@main Each

@@ -1,15 +1,18 @@
-@reference Instruction
+/// <reference path="../../node_modules/@types/node/index.d.ts" />
+import {Instruction} from "../Instruction";
+import {Runtime} from "../Runtime"
 
-@nodereq vm
-@nodereq nulllogger:logger
-logger = logger("nhp");
+import log = require("nulllogger");
+import stream = require("stream");
+
+var logger = log("nhp");
 
 var syntax = /^([^\s]+)\s(.+)$/;
-class Set implements Instruction {
-	private _what:String;
-	private _to:String;
+export class Set implements Instruction {
+	private _what:string;
+	private _to:string;
 	
-	constructor(input:String) {
+	constructor(input:string) {
 		var parts = input.match(syntax);
 		if(!parts)
 			throw new Error("Invalid <?set sytnax");
@@ -17,21 +20,27 @@ class Set implements Instruction {
 		this._to = parts[2];
 		
 		try {
-			vm.createScript("(" + this._to + ")"); // Verify it compiles
+			eval("(function(){return " + this._to + ";})"); // Verify it compiles
 		} catch(e) {
 			logger.error(e);
 			throw new Error("Failed to compile source `" + this._to + "`");
 		}
 	}
 	
-	save():String {}
-	load(data:String) {}
+	save():string {
+		return JSON.stringify([this._what, this._to]);
+	}
+	load(data:string) {
+		var obj = JSON.parse(data);
+		this._what = obj[0];
+		this._to = obj[0];
+	}
 	
-	process(source:String) {
+	process(source:string) {
 		throw new Error("This instruction can't process data");
 	}
 	
-	generateSource(stack):String {
+	generateSource():string {
 		return "try{__set(" + JSON.stringify(this._what) + ", " + this._to + ");__next();}catch(e){__out.write(__error(e));__next();};";
 	}
 	
@@ -43,5 +52,3 @@ class Set implements Instruction {
 	}
 	
 }
-
-@main Set

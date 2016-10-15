@@ -1,15 +1,18 @@
-@reference Instruction
+/// <reference path="../../node_modules/@types/node/index.d.ts" />
+import {Instruction} from "../Instruction";
+import {Runtime} from "../Runtime"
 
-@nodereq vm
-@nodereq nulllogger:logger
-logger = logger("nhp");
+import log = require("nulllogger");
+import stream = require("stream");
 
-class ElseIf implements Instruction {
-	private _condition:String;
+var logger = log("nhp");
+
+export class ElseIf implements Instruction {
+	private _condition:string;
 	
-	constructor(condition:String) {
+	constructor(condition:string) {
 		try {
-			vm.createScript("(" + condition + ")"); // Verify it compiles
+			eval("(function(){return " + condition + ";})"); // Verify it compiles
 		} catch(e) {
 			logger.error(e);
 			throw new Error("Failed to compile condition `" + condition + "`");
@@ -18,13 +21,19 @@ class ElseIf implements Instruction {
 		this._condition = condition;
 	}
 	
-	save():String {}
+	process(source:string) {
+		throw new Error("This instruction can't process data");
+	}
 	
-	load(data:String) {}
+	save():string {
+		return "";
+	}
 	
-	generateSource(stack):String {
-		stack.pop();
-		stack.push();
+	load(data:string) {}
+	
+	generateSource(stackControl:{push:Function, pop:Function}):string {
+		stackControl.pop();
+		stackControl.push();
 		return "]],[function(){" + this._condition + ";}, [";
 	}
 	
@@ -36,5 +45,3 @@ class ElseIf implements Instruction {
 	}
 	
 }
-
-@main ElseIf

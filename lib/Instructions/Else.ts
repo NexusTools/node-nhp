@@ -1,14 +1,24 @@
-@reference Instruction
+/// <reference path="../../node_modules/@types/node/index.d.ts" />
+import {Instruction} from "../Instruction";
+import {Runtime} from "../Runtime";
 
-class Else implements Instruction {
+import stream = require("stream");
+
+export class Else implements Instruction {
 	constructor() {}
 	
-	save():String {}
-	load(data:String) {}
+	save():string {
+		return "";
+	}
+	load(data:string) {}
 	
-	generateSource(stack):String {
-		stack.pop();
-		stack.push();
+	process(source:string) {
+		throw new Error("This instruction can't process data");
+	}
+	
+	generateSource(stackControl:{push:Function, pop:Function}):string {
+		stackControl.pop();
+		stackControl.push();
 		return "]],[function(){return true;}, [";
 	}
 	
@@ -19,5 +29,3 @@ class Else implements Instruction {
 	}
 	
 }
-
-@main Else

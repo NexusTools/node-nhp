@@ -1,67 +1,67 @@
-@nodereq lodash:_
-@nodereq path
+/// <reference path="../node_modules/@types/node/index.d.ts" />
 
-@reference Instruction
+import _ = require("lodash");
+import path = require("path");
 
-@include Template
+import {Template} from "./Template";
 
-@include Set
-@include Add
-@include Map
+import {Set} from "./Instructions/Set";
+import {Add} from "./Instructions/Add";
+import {Map} from "./Instructions/Map";
 
-@include Exec
-@include JSON
+import {Exec} from "./Instructions/Exec";
+import {JSON} from "./Instructions/JSON";
 
-@include Each
-@include Done
+import {Each} from "./Instructions/Each";
+import {Done} from "./Instructions/Done";
 
-@include If
-@include ElseIf
-@include Else
-@include EndIf
+import {If} from "./Instructions/If";
+import {ElseIf} from "./Instructions/ElseIf";
+import {Else} from "./Instructions/Else";
+import {EndIf} from "./Instructions/EndIf";
 
-@include Include
+import {Include} from "./Instructions/Include";
 
 var extension = /\.\w+$/;
-class NHP {
+export class NHP {
     private static defaults: Object = {
         tidyAttribs: ["false", "null", "undefined"],
         tidyComments: "not-if",
         tidyOutput: true
     }
 
-    private options: Object;
-    private constants: Object;
-    private templates: Array<Template> = {};
-    private processors = {
-        "set": function(data) {
+    options:any;
+    constants:any;
+    private templates:any;
+    private static PROCESSORS:any = {
+        "set": function(data:string) {
             return new Set(data);
         },
-        "add": function(data) {
+        "add": function(data:string) {
             return new Add(data);
         },
-        "map": function(data) {
+        "map": function(data:string) {
             return new Map(data);
         },
 
-        "exec": function(source) {
+        "exec": function(source:string) {
             return new Exec(source);
         },
-        "json": function(source) {
+        "json": function(source:string) {
             return new JSON(source);
         },
 
-        "each": function(data) {
+        "each": function(data:string) {
             return new Each(data);
         },
         "done": function() {
             return new Done();
         },
 
-        "if": function(condition) {
+        "if": function(condition:string) {
             return new If(condition);
         },
-        "elseif": function(condition) {
+        "elseif": function(condition:string) {
             return new ElseIf(condition);
         },
         "else": function() {
@@ -71,62 +71,63 @@ class NHP {
             return new EndIf();
         },
 
-        "include": function(file) {
+        "include": function(file:string) {
             return new Include(file);
         }
     };
-    private resolvers = {};
+    private resolvers:any;
 
     public static create(constants: Object) {
         return new NHP(constants);
     }
 
-    public constructor(constants: Object, options: Object) {
+    public constructor(constants:any={}, options:any={}) {
         if (!(this instanceof NHP))
             return new NHP(constants);
 
-        this.constants = constants || {};
+		this.resolvers = {};
+		this.templates = {};
+        this.constants = constants;
         this.options = {};
         _.merge(this.options, NHP.defaults);
-        if (options)
-            _.merge(this.options, options);
+        _.merge(this.options, options);
     }
 
-    public processingInstruction(name, data) {
-        if (!(name in this.processors))
+    public processingInstruction(name:string, data:string) {
+        if (!(name in NHP.PROCESSORS))
             throw new Error("No processor found with name `" + name + "`");
-        return this.processors[name](data);
+        return NHP.PROCESSORS[name](data);
     }
 
-    public resolver(name: String): Resolver {
+    public resolver(name:string):any {
         if (!(name in this.resolvers))
             throw new Error("No resolver found with name `" + name + "`");
         return this.resolvers[name];
     }
 
-    public installResolver(name: String, resolver: Function/* => (calllback:Function => (err, value))*/) {
+    public installResolver(name:string, resolver:Function) {
         this.resolvers[name] = resolver;
     }
 
-    public setConstant(name, value) {
+    public setConstant(name:string, value:any) {
         if (this.hasConstant(name))
-            throw new Error("Cannot redefine constants", name, value);
+            throw new Error("Cannot redefine constant: " + name);
         this.constants[name] = value;
     }
 
-    public hasConstant(name) {
+    public hasConstant(name:string) {
         return name in this.constants;
     }
 
-    public getConstant(name) {
+    public getConstant(name:string) {
         return this.constants[name];
     }
 
-    public mixin(object: Object) {
+    public mixin(object:Object) {
         _.merge(this.constants, object);
     }
 
-    public template(filename: String) {
+    public template(filename:string) {
         if (!extension.test(filename))
             filename += ".nhp";
         filename = path.resolve(filename);
@@ -144,10 +145,8 @@ class NHP {
         return NHP.__expressInst;
     }
 
-    public static __express(path, options, callback) {
+    public static __express(path:any, options:any, callback:any) {
         throw new Error("No idea where the documentation is on what options actually contains... once thats figured out this will work...");
     }
 
 }
-
-@main NHP

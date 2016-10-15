@@ -1,12 +1,17 @@
-@nodereq nulllogger:logger
-@nodereq lodash:_
-@nodereq htmlparser2
-@nodereq events
-@nodereq async
-@nodereq path
-@nodereq fs
+/// <reference path="../node_modules/@types/node/index.d.ts" />
 
-var vm;
+import log = require("nulllogger");
+import htmlparser2 = require("htmlparser2");
+import events = require("events");
+import stream = require("stream");
+import async = require("async");
+import path = require("path");
+import _ = require("lodash");
+import fs = require("fs");
+
+var logger = log("nhp");
+
+var vm:any;
 var USE_VM = process.env.USE_VM !== undefined;
 if(USE_VM) {
 	logger.warn("Using NodeJS VM");
@@ -14,22 +19,21 @@ if(USE_VM) {
 }
 var IGNORED_KEYWORDS = ['JSON', 'Array', 'Date', "abstract", "arguments", "boolean", "break", "byte", "case", "catch", "char", "class", "const", "continue", "debugger", "default", "delete", "do", "double", "else", "enum", "eval", "export", "extends", "false", "final", "finally", "float", "for", "function", "goto", "if", "implements", "import", "in", "instanceof", "int", "interface", "let", "long", "native", "new", "null", "package", "private", "protected", "public", "return", "short", "static", "super", "switch", "synchronized", "this", "throw", "throws", "transient", "true", "try", "typeof", "var", "void", "volatile", "while", "with", "yield"];
 
-@include Compiler
+import {NHP} from "./NHP";
+import {Compiler} from "./Compiler";
 
-logger = logger("nhp");
-
-class Template extends events.EventEmitter {
+export class Template extends events.EventEmitter {
     private static echoElements = /(title|body|error)/;
     private static rawElements = /(textarea|script|style|pre)/;
     private static $break = new Object();
 
-    private _nhp;
-    private _source: String;
-    private _compiledScript;
-    private _dirname: String;
-    private _filename: String;
-    private _compiler: Compiler;
-    constructor(filename: String, nhp) {
+    private _nhp:NHP;
+    private _source: string;
+    private _compiledScript:{runInContext:Function};
+    private _dirname:string;
+    private _filename:string;
+    private _compiler:Compiler;
+    constructor(filename: string, nhp:NHP) {
         super();
 
         this._nhp = nhp;
@@ -43,7 +47,7 @@ class Template extends events.EventEmitter {
         });
     }
 
-    public static encodeHTML(html: String, attr: boolean) {
+    public static encodeHTML(html:string, attr:boolean = false) {
         html = html.replace(/</g, "&lt;");
         html = html.replace(/>/g, "&gt;");
         if (attr)
@@ -73,20 +77,19 @@ class Template extends events.EventEmitter {
             var self = this;
             logger.gears("Compiling", this._filename);
             this._compiler = new Compiler(this._nhp);
-            this._compiler.compile(fs.createReadStream(this._filename), function(err) {
+            this._compiler.compile(fs.createReadStream(this._filename), function(err:Error) {
                 try {
                     if (err) throw err;
                     var firstTime = !self._compiledScript;
 
-                    self._compiler.optimize(self._nhp.constants, function(err) {
+                    self._compiler.optimize(self._nhp.constants, function(err:Error) {
                         try {
                             if (err) {
                                 logger.warning(err);
-                                throw new Error("Failed to optimize", this._filename, self._compiler._instructions);
+                                throw new Error("Failed to optimize: " + self._filename + ": " + JSON.stringify(self._compiler._instructions));
                             }
 
                             self._source = ""+self._compiler.generateSource();
-                            logger.debug("Generated source code", this._filename, self._source);
 							if(USE_VM)
 								self._compiledScript = vm.createScript(self._source, self._filename);
 							else {
@@ -151,15 +154,16 @@ class Template extends events.EventEmitter {
         if (this._compiledScript instanceof Error)
             throw this._compiledScript;
 
-        var vmc;
+        var vmc:any;
         if (contextIsVMC) {
             vmc = context;
             var oldDone = vmc.__done;
-            vmc.__done = function(err) {
+            vmc.__done = function(err:Error) {
                 try {
                     callback(err);
                 } finally {
                     vmc.__done = oldDone;
+					callback = function(){};
                 }
             };
         } else {
@@ -170,10 +174,10 @@ class Template extends events.EventEmitter {
             var self = this;
             var options = this._nhp.options;
             if (options.tidyOutput) {
-                var realOut = out, parser;
-                var inTag = function(regex) {
+                var realOut = out, parser:any;
+                var inTag = function(regex:RegExp) {
                     try {
-                        parser._stack.forEach(function(tag) {
+                        parser._stack.forEach(function(tag:string) {
                             if (regex.test(tag))
                                 throw Template.$break;
                         });
@@ -184,11 +188,11 @@ class Template extends events.EventEmitter {
                     }
                     return false;
                 };
-				var tagCache = {};
+				var tagCache:any = {};
                 var updateTagCache = function() {
                     tagCache.echo = (tagCache.raw = inTag(Template.rawElements)) || inTag(Template.echoElements);
                 };
-                var validComment;
+                var validComment:any;
                 var textTidyBuffer = "";
                 if (options.tidyComments) {
                     if (options.tidyComments == "not-if")
@@ -256,7 +260,7 @@ class Template extends events.EventEmitter {
                     onerror: function(err) {
                         logger.warning(err);
                         callback(err);
-                        callback = null;
+                        callback = function(){};
                     },
                     onend: function() {
                         realOut.end();
@@ -268,13 +272,16 @@ class Template extends events.EventEmitter {
 			vmc.__ = function(text:String):String {
 				return text;
 			};
-            vmc.__done = callback;
+            vmc.__done = function() {
+				callback();
+				callback = function(){}
+			};
             vmc.__series = async.series;
             vmc.__dirname = this._dirname;
             vmc.__filename = this._filename;
-            vmc.__each = function(eachOf, iterator, callback) {
+            vmc.__each = function(eachOf:any, iterator:any, callback:any) {
                 var calls = 0;
-                var iterate = function(entry, callback) {
+                var iterate = function(entry:any, callback:Function) {
                     if (calls++ >= 50) {
                         process.nextTick(function() {
                             iterator(entry, callback);
@@ -298,8 +305,8 @@ class Template extends events.EventEmitter {
                 else
                     callback(); // Silently fail
             };
-            vmc.__if = function(segments, callback) {
-                var __next, i = 0;
+            vmc.__if = function(segments:Array<any>, callback:any) {
+                var __next:Function, i = 0;
                 __next = function() {
                     if (i < segments.length) {
                         var segment = segments[i++];
@@ -312,25 +319,25 @@ class Template extends events.EventEmitter {
                 }
                 __next();
             };
-            vmc.__add = function(to, what) {
+            vmc.__add = function(to:string, what:any) {
                 var arr = vmc.env[to];
                 if (!_.isArray(arr))
                     vmc.env[to] = arr = [];
                 arr.push(what);
             };
-            vmc.__set = function(what, to) {
+            vmc.__set = function(what:string, to:any) {
                 vmc.env[what] = to;
             };
-            vmc.__map = function(what, at, to) {
+            vmc.__map = function(what:string, at:string, to:any) {
                 var map = vmc.env[what];
                 if (!_.isObject(map))
                     vmc.env[what] = map = {};
                 map[at] = to;
             };
-            vmc.__get = function(what) {
+            vmc.__get = function(what:string) {
                 return vmc.env[what];
             };
-            vmc.__error = function(err, attr, triple) {
+            vmc.__error = function(err:any, attr:any, triple:any) {
                 err = "" + err;
                 if (attr) {
                     if (triple)
@@ -339,7 +346,7 @@ class Template extends events.EventEmitter {
                 }
                 return "<error>" + Template.encodeHTML(err) + "</error>";
             }
-            vmc.__include = function(file, callback) {
+            vmc.__include = function(file:any, callback:any) {
                 logger.info("Including", file);
 
                 var template = self._nhp.template(path.resolve(self._dirname, file));
@@ -351,7 +358,7 @@ class Template extends events.EventEmitter {
                     template.once("compiled", function() {
                         template.run(vmc, out, callback, true);
                     });
-                    template.once("error", function(err) {
+                    template.once("error", function(err:Error) {
                         logger.warning(err);
                         out.write(vmc.__error(err));
                         callback();
@@ -359,10 +366,10 @@ class Template extends events.EventEmitter {
                 }
             }
             vmc.__encode = Template.encodeHTML;
-            vmc.__resolver = function(name, callback) {
+            vmc.__resolver = function(name:string, callback:Function) {
                 self._nhp.resolver(name)(callback);
             }
-            vmc.__string = function(data, attr, triple) {
+            vmc.__string = function(data:string, attr:boolean, triple:boolean) {
                 data = "" + data;
                 if (attr) {
                     if (triple)
@@ -377,5 +384,3 @@ class Template extends events.EventEmitter {
         this._compiledScript.runInContext(vmc);
     }
 }
-
-@main Template

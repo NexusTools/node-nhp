@@ -1,1 +1,1 @@
-module.exports = require("typeinclude")(__dirname, require("path").resolve(__dirname, "lib", "Instructions"))("NHP");
+module.exports = require("./lib/NHP.js").NHP;

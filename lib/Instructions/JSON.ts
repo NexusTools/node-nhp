@@ -1,31 +1,38 @@
-@nodereq nulllogger:logger
-@nodereq vm
+/// <reference path="../../node_modules/@types/node/index.d.ts" />
+import {Instruction} from "../Instruction";
+import {Runtime} from "../Runtime"
 
-@reference Instruction
+import log = require("nulllogger");
+import stream = require("stream");
 
-class JSON implements Instruction {
-	private _source:String;
+var logger = log("nhp");
+
+export class JSON implements Instruction {
+	private _source:string;
 	
-	constructor(source:String, attrib:boolean, raw:boolean) {
+	constructor(source:string) {
 		try {
-			vm.createScript(this._source = source); // Verify it compiles
+			if(!global.JSON.stringify(this._source = source))
+				throw new Error("Could not parse source");
 		} catch(e) {
 			logger.error(e);
 			throw new Error("Failed to compile source `" + source + "`");
 		}
 	}
 	
-	save():String {
-		return this._sources;
+	save():string {
+		return this._source;
 	}
 	
-	load(data:String) {}
+	load(data:string) {
+		this._source = data;
+	}
 	
-	process(source:String) {
+	process(source:string) {
 		this._source = source;
 	}
 	
-	generateSource():String {
+	generateSource():string {
 		var source = "try{__out.write(JSON.stringify(" + this._source;
 		source += "));}catch(e){__out.write(__error(e";
 		source += "));};__next();";
@@ -41,5 +48,3 @@ class JSON implements Instruction {
 	}
 	
 }
-
-@main JSON

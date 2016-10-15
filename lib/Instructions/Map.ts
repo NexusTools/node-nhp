@@ -1,17 +1,20 @@
-@reference Instruction
+/// <reference path="../../node_modules/@types/node/index.d.ts" />
+import {Instruction} from "../Instruction";
+import {Runtime} from "../Runtime"
 
-@nodereq vm
-@nodereq nulllogger:logger
-logger = logger("nhp");
+import log = require("nulllogger");
+import stream = require("stream");
+
+var logger = log("nhp");
 
 var short = /^([^\s]+)\s([^\s]+)\s*$/;
 var syntax = /^([^\s]+)\s([^\s]+)\s(.+)$/;
-class Map implements Instruction {
-	private _what:String;
-	private _at:String;
-	private _with:String;
+export class Map implements Instruction {
+	private _what:string;
+	private _at:string;
+	private _with:string;
 	
-	constructor(input:String) {
+	constructor(input:string) {
 		var parts = input.match(syntax);
 		if(!parts) {
 			parts = input.match(short);
@@ -24,21 +27,28 @@ class Map implements Instruction {
 		this._with = parts[3];
 		
 		try {
-			vm.createScript("(" + this._with + ")"); // Verify it compiles
+			eval("(function(){return " + this._with + ";})"); // Verify it compiles
 		} catch(e) {
 			logger.error(e);
 			throw new Error("Failed to compile with `" + this._with + "`");
 		}
 	}
 	
-	save():String {}
-	load(data:String) {}
+	save():string {
+		return JSON.stringify([this._what, this._at, this._with]);
+	}
+	load(data:string) {
+		var obj = JSON.parse(data);
+		this._what = obj[0];
+		this._at = obj[1];
+		this._with = obj[2];
+	}
 	
-	process(source:String) {
+	process(source:string) {
 		throw new Error("This instruction can't process data");
 	}
 	
-	generateSource(stack):String {
+	generateSource():string {
 		return "try{__map(" + JSON.stringify(this._what) + ", " + JSON.stringify(this._at) + ", " + this._with + ");__next();}catch(e){__out.write(__error(e));__next();};";
 	}
 	
@@ -50,5 +60,3 @@ class Map implements Instruction {
 	}
 	
 }
-
-@main Map

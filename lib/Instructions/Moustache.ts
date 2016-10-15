@@ -1,17 +1,21 @@
-@reference Instruction
+/// <reference path="../../node_modules/@types/node/index.d.ts" />
 
-@nodereq vm
-@nodereq nulllogger:logger
-logger = logger("nhp");
+import {Instruction} from "../Instruction";
+import {Runtime} from "../Runtime"
 
-class Moustache implements Instruction {
-	private _source:String;
+import log = require("nulllogger");
+import stream = require("stream");
+
+var logger = log("nhp");
+
+export class Moustache implements Instruction {
+	private _source:string;
 	private _attrib:boolean;
 	private _raw:boolean;
 	
-	constructor(source:String, attrib:boolean, raw:boolean) {
+	constructor(source:string, attrib:boolean, raw:boolean) {
 		try {
-			vm.createScript("(" + source + ")"); // Verify it compiles
+			eval("(function(){return " + source + ";})"); // Verify it compiles
 		} catch(e) {
 			logger.error(e);
 			throw new Error("Failed to compile source `" + source + "`");
@@ -22,17 +26,17 @@ class Moustache implements Instruction {
 		this._raw = raw;
 	}
 	
-	save():String {
-		return this._sources;
+	save():string {
+		return this._source;
 	}
 	
-	load(data:String) {}
+	load(data:string) {}
 	
-	process(source:String) {
+	process(source:string) {
 		this._source = source;
 	}
 	
-	generateSource():String {
+	generateSource():string {
 		var source = "try{__out.write(__string(" + this._source;
 		if(this._attrib) {
 			source += ",true";
@@ -51,14 +55,10 @@ class Moustache implements Instruction {
 		return source
 	}
 	
-	run(runtime:Runtime, out:stream.Writable) {
-		
-	}
+	run(runtime:Runtime, out:stream.Writable) {}
 	
 	async():boolean {
 		return false;
 	}
 	
 }
-
-@main Moustache

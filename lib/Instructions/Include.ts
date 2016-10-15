@@ -1,15 +1,18 @@
-@reference Instruction
+/// <reference path="../../node_modules/@types/node/index.d.ts" />
+import {Instruction} from "../Instruction";
+import {Runtime} from "../Runtime"
 
-@nodereq vm
-@nodereq nulllogger:logger
-logger = logger("nhp");
+import log = require("nulllogger");
+import stream = require("stream");
 
-class Include implements Instruction {
-	private _source:String;
+var logger = log("nhp");
+
+export class Include implements Instruction {
+	private _source:string;
 	
-	constructor(source) {
+	constructor(source:string) {
 		try {
-			vm.createScript("(" + source + ")"); // Verify it compiles
+			eval("(function(){return " + source + ";})"); // Verify it compiles
 		} catch(e) {
 			logger.error(e);
 			throw new Error("Failed to compile source `" + source + "`");
@@ -18,16 +21,19 @@ class Include implements Instruction {
 		this._source = source;
 	}
 	
-	save():String {
+	save():string {
+		return this._source;
 	}
 	
-	load(data:String) {
+	load(data:string) {
+		this._source = data;
 	}
 	
-	process(source:String) {
+	process(source:string) {
+		throw new Error("This instruction cannot process data...");
 	}
 	
-	generateSource(stack):String {
+	generateSource():string {
 		var source = "try{__include(";
 		source += this._source;
 		source += ", __next);}catch(e){__out.write(__error(e));__next();};";
@@ -36,6 +42,8 @@ class Include implements Instruction {
 	
 	run(runtime:Runtime, out:stream.Writable) {}
 	
+	async():boolean {
+		return false;
+	}
+	
 }
-
-@main Include

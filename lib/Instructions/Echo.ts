@@ -1,25 +1,29 @@
-@reference Instruction
+/// <reference path="../../node_modules/@types/node/index.d.ts" />
+import {Instruction} from "../Instruction";
+import {Runtime} from "../Runtime";
 
-class Echo implements Instruction {
-	private _data:String;
+import stream = require("stream");
+
+export class Echo implements Instruction {
+	_data:string;
 	
-	constructor(data:String) {
+	constructor(data:string) {
 		this._data = data;
 	}
 	
-	save():String {
+	save():string {
 		return this._data;
 	}
 	
-	load(data:String) {
+	load(data:string) {
 		this._data = data;
 	}
 	
-	process(source:String) {
+	process(source:string) {
 		throw new Error("This instruction can't process data");
 	}
 	
-	generateSource():String {
+	generateSource():string {
 		return "__out.write(" + JSON.stringify(this._data) + ");__next();";
 	}
 	
@@ -33,5 +37,3 @@ class Echo implements Instruction {
 	}
 	
 }
-
-@main Echo

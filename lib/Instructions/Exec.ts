@@ -1,15 +1,18 @@
-@reference Instruction
+/// <reference path="../../node_modules/@types/node/index.d.ts" />
+import {Instruction} from "../Instruction";
+import {Runtime} from "../Runtime"
 
-@nodereq vm
-@nodereq nulllogger:logger
-logger = logger("nhp");
+import log = require("nulllogger");
+import stream = require("stream");
 
-class Moustache implements Instruction {
-	private _source:String;
+var logger = log("nhp");
+
+export class Exec implements Instruction {
+	private _source:string;
 	
-	constructor(source:String) {
+	constructor(source:string) {
 		try {
-			vm.createScript(source); // Verify it compiles
+			eval("(function(){" + source + "})"); // Verify it compiles
 		} catch(e) {
 			logger.error(e);
 			throw new Error("Failed to compile source `" + source + "`");
@@ -18,17 +21,19 @@ class Moustache implements Instruction {
 		this._source = source;
 	}
 	
-	save():String {
-		return this._sources;
+	save():string {
+		return this._source;
 	}
 	
-	load(data:String) {}
+	load(data:string) {
+		this._source = data;
+	}
 	
-	process(source:String) {
+	process(source:string) {
 		this._source = source;
 	}
 	
-	generateSource():String {
+	generateSource():string {
 		return "try{" + this._source + ";}catch(e){__out.write(__error(e));};__next();";
 	}
 	
@@ -41,5 +46,3 @@ class Moustache implements Instruction {
 	}
 	
 }
-
-@main Moustache

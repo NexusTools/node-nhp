@@ -1,29 +1,30 @@
-@nodereq nulllogger:logger
-@nodereq vm
+/// <reference path="../../node_modules/@types/node/index.d.ts" />
+import {Instruction} from "../Instruction";
+import {Runtime} from "../Runtime"
 
-@reference Instruction
+import stream = require("stream");
 
-class MoustacheResolver implements Instruction {
-	private _key:String;
-	private _source:String;
+export class MoustacheResolver implements Instruction {
+	private _key:string;
+	private _source:string;
 	private _attrib:boolean;
 	private _raw:boolean;
 	
-	constructor(key:String, attrib:boolean, raw:boolean) {
+	constructor(key:string, attrib:boolean, raw:boolean) {
 		this._key = key;
 	}
 	
-	save():String {
+	save():string {
 		return this._key;
 	}
 	
-	load(data:String) {}
+	load(data:string) {}
 	
-	process(source:String) {
+	process(source:string) {
 		this._source = source;
 	}
 	
-	generateSource():String {
+	generateSource():string {
 		var source = "try{__resolver(";
 		source += JSON.stringify(this._key);
 		source += ")(function(err, value){try{if(err){throw err;};__out.write(__string(value";
@@ -60,5 +61,3 @@ class MoustacheResolver implements Instruction {
 	}
 	
 }
-
-@main MoustacheResolver

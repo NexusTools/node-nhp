@@ -1,0 +1,16 @@
+{
+    "compilerOptions": {
+        "target": "es5",
+		"typeRoots" : ["./node_modules", "./node_modules/@types"],
+		"types": ["nulllogger", "async", "htmlparser2", "lodash"],
+		"module": "commonjs",
+        "noImplicitAny": true,
+        "removeComments": true,
+        "preserveConstEnums": true,
+		"moduleResolution": "node",
+        "sourceMap": true
+    },
+    "include": [
+        "lib/**.ts"
+    ]
+}

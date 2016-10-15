@@ -1,8 +1,5 @@
-var testCase = require('mocha').describe
-var pre = require('mocha').before
-var assertions = require('mocha').assertions
-var path = require('path')
-var assert = require('assert')
+var path = require('path');
+require("source-map-support").install();
 
 var nhp;
 it('include index.js', function() { // added "done" as parameter
