@@ -1,4 +1,5 @@
-/// <reference path="../../node_modules/@types/node/index.d.ts" />
+/// <reference types="node" />
+
 import {Instruction} from "../Instruction";
 import {Runtime} from "../Runtime";
 

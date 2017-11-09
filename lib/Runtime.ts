@@ -1,4 +1,5 @@
 /// <reference types="node" />
+
 import vm = require("vm");
 import stream = require("stream");
 

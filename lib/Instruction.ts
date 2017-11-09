@@ -1,4 +1,5 @@
 /// <reference types="node" />
+
 import stream = require("stream");
 
 import {Runtime} from "./Runtime"
