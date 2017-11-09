@@ -9,7 +9,7 @@ import path = require("path");
 import _ = require("lodash");
 import fs = require("fs");
 
-var logger = log("nhp");
+const logger = new log("nhp");
 
 var vm: any;
 var USE_VM = process.env.USE_VM !== undefined;
@@ -40,11 +40,13 @@ export class Template extends events.EventEmitter {
         this._filename = filename;
         this._dirname = path.dirname(filename);
 
-        this.compile();
-        var self = this;
-        fs.watch(this._filename, function (event) {
-            self.compile();
+        this.addListener("error", function(err: Error) {
+            logger.warn(err);
         });
+        fs.watch(this._filename, (event) => {
+            this.compile();
+        });
+        this.compile();
     }
 
     public static encodeHTML(html: string, attr: boolean = false) {
@@ -86,7 +88,7 @@ export class Template extends events.EventEmitter {
                         try {
                             if (err) {
                                 logger.warning(err);
-                                throw new Error("Failed to optimize: " + self._filename + ": " + JSON.stringify(self._compiler._instructions));
+                                throw new Error("Failed to optimize: " + self._filename + ": " + err);
                             }
 
                             self._source = "" + self._compiler.generateSource();
@@ -148,7 +150,7 @@ export class Template extends events.EventEmitter {
         }
     }
 
-    public run(context: Object, out: stream.Writable, callback: Function, contextIsVMC: boolean) {
+    public run(context: Object, out: NodeJS.WritableStream, callback: (err?: Error) => void, contextIsVMC?: boolean) {
         if (!this._compiledScript)
             throw new Error("Not compiled yet");
         if (this._compiledScript instanceof Error)
@@ -353,27 +355,32 @@ export class Template extends events.EventEmitter {
                 }
                 return "<error>" + Template.encodeHTML(err) + "</error>";
             }
-            vmc.__include = function (file: any, callback: any) {
+            vmc.__include = function (file: any, cb: any) {
                 logger.info("Including", file);
 
                 var template = self._nhp.template(path.resolve(self._dirname, file));
                 if (template.isCompiled())
                     process.nextTick(function () {
-                        template.run(vmc, out, callback, true);
+                        template.run(vmc, out, cb, true);
                     });
                 else {
+                    var timeout: NodeJS.Timer;
                     var onCompiled: Function, onError: Function;
+                    const _cb = function() {
+                        template.removeListener("compiled", onCompiled as any);
+                        template.removeListener("error", onError as any);
+                        cb();
+                    };
                     template.once("compiled", onCompiled = function () {
-                        template.removeListener("compiled", onCompiled);
-                        template.removeListener("error", onError);
-                        template.run(vmc, out, callback, true);
+                        timeout = setTimeout(function() {
+                            template.run(vmc, out, _cb, true);
+                        }, 100);
                     });
                     template.once("error", onError = function (err: Error) {
-                        template.removeListener("compiled", onCompiled);
-                        template.removeListener("error", onError);
-                        logger.warning(err);
+                        try{clearTimeout(timeout);}catch(e){}
                         out.write(vmc.__error(err));
-                        callback();
+                        logger.warning(err);
+                        _cb();
                     });
                 }
             }

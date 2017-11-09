@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import { Instruction } from "./Instruction";
 import { Template } from "./Template";
 export interface NHPOptions {
@@ -22,7 +23,8 @@ export declare class NHP {
     getConstant(name: string): any;
     mixin(object: Object): void;
     template(filename: string): Template;
-    private static __expressInst;
-    static instance(): NHP;
-    static __express(path: any, options: any, callback: any): void;
+    genSource(filename: string, options: any, cb: (err?: Error, source?: string) => void): void;
+    render(filename: string, options: any, cb: (err?: Error, html?: string) => void): void;
+    renderToStream(filename: string, options: any, stream: NodeJS.WritableStream, cb: (err?: Error) => void): void;
+    static __express(options?: NHPOptions): any;
 }

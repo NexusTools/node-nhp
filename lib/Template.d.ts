@@ -1,6 +1,5 @@
 /// <reference types="node" />
 import events = require("events");
-import stream = require("stream");
 import { NHP } from "./NHP";
 export declare class Template extends events.EventEmitter {
     private static echoElements;
@@ -20,5 +19,5 @@ export declare class Template extends events.EventEmitter {
     };
     hasAsyncInstructions(): boolean;
     private compile();
-    run(context: Object, out: stream.Writable, callback: Function, contextIsVMC: boolean): void;
+    run(context: Object, out: NodeJS.WritableStream, callback: (err?: Error) => void, contextIsVMC?: boolean): void;
 }

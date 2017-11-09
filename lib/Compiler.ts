@@ -18,7 +18,7 @@ import {MoustacheResolver} from "./Instructions/MoustacheResolver"
 import {Translate} from "./Instructions/Translate"
 import {Echo} from "./Instructions/Echo"
 
-var logger = log("nhp");
+const logger = new log("nhp");
 
 export class Compiler {
     private static resolverRegex = /^\#/;

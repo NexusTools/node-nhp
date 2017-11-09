@@ -6,7 +6,7 @@ import {Runtime} from "../Runtime"
 import log = require("nulllogger");
 import stream = require("stream");
 
-var logger = log("nhp");
+var logger = new log("nhp");
 
 var syntax = /^([^\s]+)\s(.+)$/;
 export class Add implements Instruction {

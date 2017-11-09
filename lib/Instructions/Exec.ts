@@ -6,7 +6,7 @@ import {Runtime} from "../Runtime"
 import log = require("nulllogger");
 import stream = require("stream");
 
-var logger = log("nhp");
+var logger = new log("nhp");
 
 export class Exec implements Instruction {
 	private _source:string;

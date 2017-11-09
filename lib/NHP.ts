@@ -2,6 +2,7 @@
 
 import _ = require("lodash");
 import path = require("path");
+import { Writable } from "stream";
 
 import {Instruction} from "./Instruction";
 import {Template} from "./Template";
@@ -33,6 +34,13 @@ export interface NHPOptions {
     tidyComments?: string;
     tidyOutput?: boolean;
 }
+class BufferedWritable extends Writable {
+    buffer = "";
+    _write(chunk: any, encoding: string, callback: Function) {
+        this.buffer += chunk.toString("utf8");
+        callback();
+    }
+}
 export class NHP {
     private static defaults: NHPOptions = {
         tidyAttribs: ["false", "null", "undefined"],
@@ -40,105 +48,105 @@ export class NHP {
         tidyOutput: true
     }
 
-    constants:any;
+    constants: any;
     options: NHPOptions;
-    private templates: {[index: string]:Template};
-    private static PROCESSORS: {[index:string]: Processor} = {
-        "set": function(data:string) {
+    private templates: {[index: string]: Template};
+    private static PROCESSORS: {[index: string]: Processor} = {
+        "set": function (data: string) {
             return new Set(data);
         },
-        "add": function(data:string) {
+        "add": function (data: string) {
             return new Add(data);
         },
-        "map": function(data:string) {
+        "map": function (data: string) {
             return new Map(data);
         },
 
-        "exec": function(source:string) {
+        "exec": function (source: string) {
             return new Exec(source);
         },
-        "json": function(source:string) {
+        "json": function (source: string) {
             return new JSON(source);
         },
 
-        "each": function(data:string) {
+        "each": function (data: string) {
             return new Each(data);
         },
-        "done": function() {
+        "done": function () {
             return new Done();
         },
 
-        "if": function(condition:string) {
+        "if": function (condition: string) {
             return new If(condition);
         },
-        "elseif": function(condition:string) {
+        "elseif": function (condition: string) {
             return new ElseIf(condition);
         },
-        "else": function() {
+        "else": function () {
             return new Else();
         },
-        "endif": function() {
+        "endif": function () {
             return new EndIf();
         },
 
-        "include": function(file:string) {
+        "include": function (file: string) {
             return new Include(file);
         }
     };
-    private resolvers:any;
+    private resolvers: any;
 
     public static create(constants: Object) {
         return new NHP(constants);
     }
 
-    public constructor(constants:any={}, options?: NHPOptions) {
+    public constructor(constants?: any, options?: NHPOptions) {
         if (!(this instanceof NHP))
             return new NHP(constants);
 
         this.resolvers = {};
         this.templates = {};
-        this.constants = constants;
+        this.constants = constants || {} as any;
         this.options = {} as any;
         _.merge(this.options, NHP.defaults);
-        if(options)
+        if (options)
             _.merge(this.options, options);
     }
 
-    public processingInstruction(name:string, data:string) {
+    public processingInstruction(name: string, data: string) {
         if (!(name in NHP.PROCESSORS))
             throw new Error("No processor found with name `" + name + "`");
         return NHP.PROCESSORS[name](data);
     }
 
-    public resolver(name:string):any {
+    public resolver(name: string): any {
         if (!(name in this.resolvers))
             throw new Error("No resolver found with name `" + name + "`");
         return this.resolvers[name];
     }
 
-    public installResolver(name:string, resolver:Function) {
+    public installResolver(name: string, resolver: Function) {
         this.resolvers[name] = resolver;
     }
 
-    public setConstant(name:string, value:any) {
+    public setConstant(name: string, value: any) {
         if (this.hasConstant(name))
             throw new Error("Cannot redefine constant: " + name);
         this.constants[name] = value;
     }
 
-    public hasConstant(name:string) {
+    public hasConstant(name: string) {
         return name in this.constants;
     }
 
-    public getConstant(name:string) {
+    public getConstant(name: string) {
         return this.constants[name];
     }
 
-    public mixin(object:Object) {
+    public mixin(object: Object) {
         _.merge(this.constants, object);
     }
 
-    public template(filename:string) {
+    public template(filename: string) {
         if (!extension.test(filename))
             filename += ".nhp";
         filename = path.resolve(filename);
@@ -149,15 +157,67 @@ export class NHP {
         return this.templates[filename];
     }
 
-    private static __expressInst: NHP;
-    public static instance() {
-        if (!NHP.__expressInst)
-            return NHP.__expressInst = new NHP();
-        return NHP.__expressInst;
+    public genSource(filename: string, options: any, cb: (err?: Error, source?: string) => void) {
+        const template = this.template(filename);
+        if (template.isCompiled())
+            cb(undefined, template.getSource());
+        else {
+            var timeout: NodeJS.Timer;
+            var onCompiled: Function, onError: Function;
+            const _cb = function(err?: Error, source?: string) {
+                template.removeListener("compiled", onCompiled as any);
+                template.removeListener("error", onError as any);
+                cb(err, source);
+            }
+            template.on("compiled", onCompiled = function() {
+                timeout = setTimeout(function() {
+                    _cb(undefined, template.getSource());
+                }, 100);
+            });
+            template.on("error", onError = function(err: Error) {
+                try{clearTimeout(timeout);}catch(e){}
+                _cb(err);
+            });
+        }
     }
 
-    public static __express(path:any, options:any, callback:any) {
-        throw new Error("No idea where the documentation is on what options actually contains... once thats figured out this will work...");
+    public render(filename: string, options: any, cb: (err?: Error, html?: string) => void) {
+        const bufferedWritable = new BufferedWritable();
+        this.renderToStream(filename, options, bufferedWritable, function(err) {
+            if(err)
+                cb(err);
+            else
+                cb(undefined, bufferedWritable.buffer);
+        });
+    }
+
+    public renderToStream(filename: string, options: any, stream: NodeJS.WritableStream, cb: (err?: Error) => void) {
+        const template = this.template(filename);
+        if (template.isCompiled())
+            template.run(options, stream, cb);
+        else {
+            var timeout: NodeJS.Timer;
+            var onCompiled: Function, onError: Function;
+            const _cb = function(err?: Error) {
+                template.removeListener("compiled", onCompiled as any);
+                template.removeListener("error", onError as any);
+                cb(err);
+            }
+            template.on("compiled", onCompiled = function() {
+                timeout = setTimeout(function() {
+                    template.run(options, stream, _cb);
+                }, 100);
+            });
+            template.on("error", onError = function(err: Error) {
+                try{clearTimeout(timeout);}catch(e){}
+                _cb(err);
+            });
+        }
+    }
+
+    public static __express(options?: NHPOptions) {
+        const nhp = new NHP({}, options);
+        return nhp.render.bind(nhp);
     }
 
 }
