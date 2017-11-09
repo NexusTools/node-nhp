@@ -3,7 +3,7 @@
 import log = require("nulllogger");
 import htmlparser2 = require("htmlparser2");
 import events = require("events");
-import stream = require("stream");
+import { Writable } from "stream";
 import async = require("async");
 import path = require("path");
 import _ = require("lodash");
@@ -22,6 +22,13 @@ var IGNORED_KEYWORDS = ['JSON', 'Array', 'Date', "abstract", "arguments", "boole
 import {NHP} from "./NHP";
 import {Compiler} from "./Compiler";
 
+class BufferedWritable extends Writable {
+    buffer = "";
+    _write(chunk: any, encoding: string, callback: Function) {
+        this.buffer += chunk.toString("utf8");
+        callback();
+    }
+}
 export class Template extends events.EventEmitter {
     private static echoElements = /(title|body|error)/;
     private static rawElements = /(textarea|script|style|pre)/;
@@ -47,6 +54,41 @@ export class Template extends events.EventEmitter {
             this.compile();
         });
         this.compile();
+    }
+    
+    
+
+    public render(options: any, cb: (err?: Error, html?: string) => void) {
+        const bufferedWritable = new BufferedWritable();
+        this.renderToStream(options, bufferedWritable, function(err?: Error) {
+            if(err)
+                cb(err);
+            else
+                cb(undefined, bufferedWritable.buffer);
+        });
+    }
+
+    public renderToStream(options: any, stream: NodeJS.WritableStream, cb: (err?: Error) => void) {
+        if (this.isCompiled())
+            this.run(options, stream, cb);
+        else {
+            var timeout: NodeJS.Timer;
+            var onCompiled: Function, onError: Function;
+            const _cb = (err?: Error) => {
+                this.removeListener("compiled", onCompiled as any);
+                this.removeListener("error", onError as any);
+                cb(err);
+            }
+            this.on("compiled", onCompiled = () => {
+                timeout = setTimeout(() => {
+                    this.run(options, stream, _cb);
+                }, 10);
+            });
+            this.on("error", onError = function(err: Error) {
+                try{clearTimeout(timeout);}catch(e){}
+                _cb(err);
+            });
+        }
     }
 
     public static encodeHTML(html: string, attr: boolean = false) {

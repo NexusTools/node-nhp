@@ -12,6 +12,8 @@ export declare class Template extends events.EventEmitter {
     private _filename;
     private _compiler;
     constructor(filename: string, nhp: NHP);
+    render(options: any, cb: (err?: Error, html?: string) => void): void;
+    renderToStream(options: any, stream: NodeJS.WritableStream, cb: (err?: Error) => void): void;
     static encodeHTML(html: string, attr?: boolean): string;
     getSource(): string;
     isCompiled(): {

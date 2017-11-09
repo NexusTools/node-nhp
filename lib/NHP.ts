@@ -2,7 +2,6 @@
 
 import _ = require("lodash");
 import path = require("path");
-import { Writable } from "stream";
 
 import {Instruction} from "./Instruction";
 import {Template} from "./Template";
@@ -33,13 +32,6 @@ export interface NHPOptions {
     tidyAttribs?: string[];
     tidyComments?: string;
     tidyOutput?: boolean;
-}
-class BufferedWritable extends Writable {
-    buffer = "";
-    _write(chunk: any, encoding: string, callback: Function) {
-        this.buffer += chunk.toString("utf8");
-        callback();
-    }
 }
 export class NHP {
     private static defaults: NHPOptions = {
@@ -182,37 +174,11 @@ export class NHP {
     }
 
     public render(filename: string, options: any, cb: (err?: Error, html?: string) => void) {
-        const bufferedWritable = new BufferedWritable();
-        this.renderToStream(filename, options, bufferedWritable, function(err) {
-            if(err)
-                cb(err);
-            else
-                cb(undefined, bufferedWritable.buffer);
-        });
+        this.template(filename).render(options, cb);
     }
 
     public renderToStream(filename: string, options: any, stream: NodeJS.WritableStream, cb: (err?: Error) => void) {
-        const template = this.template(filename);
-        if (template.isCompiled())
-            template.run(options, stream, cb);
-        else {
-            var timeout: NodeJS.Timer;
-            var onCompiled: Function, onError: Function;
-            const _cb = function(err?: Error) {
-                template.removeListener("compiled", onCompiled as any);
-                template.removeListener("error", onError as any);
-                cb(err);
-            }
-            template.on("compiled", onCompiled = function() {
-                timeout = setTimeout(function() {
-                    template.run(options, stream, _cb);
-                }, 100);
-            });
-            template.on("error", onError = function(err: Error) {
-                try{clearTimeout(timeout);}catch(e){}
-                _cb(err);
-            });
-        }
+        this.template(filename).renderToStream(options, stream, cb);
     }
 
     public static __express(options?: NHPOptions) {
