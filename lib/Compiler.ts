@@ -1,4 +1,4 @@
-/// <reference path="../node_modules/@types/node/index.d.ts" />
+/// <reference types="node" />
 
 import htmlparser2 = require("htmlparser2");
 import log = require("nulllogger");

@@ -1,7 +1,3 @@
-/lib/*.js
-/lib/*.js.map
-/lib/Instructions/*.js
-/lib/Instructions/*.js.map
 /nbproject/private
 /node_modules
 /typeinclude-cache

@@ -1,16 +1,19 @@
 {
+    "compileOnSave": true,
     "compilerOptions": {
         "target": "es5",
-		"typeRoots" : ["./node_modules", "./node_modules/@types"],
-		"types": ["nulllogger", "async", "htmlparser2", "lodash"],
-		"module": "commonjs",
+        "module": "commonjs",
         "noImplicitAny": true,
         "removeComments": true,
         "preserveConstEnums": true,
-		"moduleResolution": "node",
+        "moduleResolution": "node",
+        "declaration": true,
         "sourceMap": true
     },
     "include": [
         "lib/**.ts"
+    ],
+    "files": [
+        "index.ts"
     ]
 }

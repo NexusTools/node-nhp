@@ -1,4 +1,4 @@
-/// <reference path="../node_modules/@types/node/index.d.ts" />
+/// <reference types="node" />
 
 import log = require("nulllogger");
 import htmlparser2 = require("htmlparser2");
@@ -11,11 +11,11 @@ import fs = require("fs");
 
 var logger = log("nhp");
 
-var vm:any;
+var vm: any;
 var USE_VM = process.env.USE_VM !== undefined;
-if(USE_VM) {
-	logger.warn("Using NodeJS VM");
-	vm = require("vm");
+if (USE_VM) {
+    logger.warn("Using NodeJS VM");
+    vm = require("vm");
 }
 var IGNORED_KEYWORDS = ['JSON', 'Array', 'Date', "abstract", "arguments", "boolean", "break", "byte", "case", "catch", "char", "class", "const", "continue", "debugger", "default", "delete", "do", "double", "else", "enum", "eval", "export", "extends", "false", "final", "finally", "float", "for", "function", "goto", "if", "implements", "import", "in", "instanceof", "int", "interface", "let", "long", "native", "new", "null", "package", "private", "protected", "public", "return", "short", "static", "super", "switch", "synchronized", "this", "throw", "throws", "transient", "true", "try", "typeof", "var", "void", "volatile", "while", "with", "yield"];
 
@@ -27,13 +27,13 @@ export class Template extends events.EventEmitter {
     private static rawElements = /(textarea|script|style|pre)/;
     private static $break = new Object();
 
-    private _nhp:NHP;
+    private _nhp: NHP;
     private _source: string;
-    private _compiledScript:{runInContext:Function};
-    private _dirname:string;
-    private _filename:string;
-    private _compiler:Compiler;
-    constructor(filename: string, nhp:NHP) {
+    private _compiledScript: {runInContext: Function};
+    private _dirname: string;
+    private _filename: string;
+    private _compiler: Compiler;
+    constructor(filename: string, nhp: NHP) {
         super();
 
         this._nhp = nhp;
@@ -42,19 +42,19 @@ export class Template extends events.EventEmitter {
 
         this.compile();
         var self = this;
-        fs.watch(this._filename, function(event) {
+        fs.watch(this._filename, function (event) {
             self.compile();
         });
     }
 
-    public static encodeHTML(html:string, attr:boolean = false) {
+    public static encodeHTML(html: string, attr: boolean = false) {
         html = html.replace(/</g, "&lt;");
         html = html.replace(/>/g, "&gt;");
         if (attr)
             return html.replace(/"/g, "&quot;");
         return html;
     }
-    
+
     public getSource() {
         return this._source;
     }
@@ -71,56 +71,56 @@ export class Template extends events.EventEmitter {
         try {
             // Stop the active compiler, if any
             this._compiler.cancel();
-        } catch (e) { }
+        } catch (e) {}
 
         try {
             var self = this;
             logger.gears("Compiling", this._filename);
             this._compiler = new Compiler(this._nhp);
-            this._compiler.compile(fs.createReadStream(this._filename), function(err:Error) {
+            this._compiler.compile(fs.createReadStream(this._filename), function (err: Error) {
                 try {
                     if (err) throw err;
                     var firstTime = !self._compiledScript;
 
-                    self._compiler.optimize(self._nhp.constants, function(err:Error) {
+                    self._compiler.optimize(self._nhp.constants, function (err: Error) {
                         try {
                             if (err) {
                                 logger.warning(err);
                                 throw new Error("Failed to optimize: " + self._filename + ": " + JSON.stringify(self._compiler._instructions));
                             }
 
-                            self._source = ""+self._compiler.generateSource();
-							if(USE_VM)
-								self._compiledScript = vm.createScript(self._source, self._filename);
-							else {
-								var match:any, inquote:any = false, variables:Array<String> = [];
-								var reg = /(\\?["']|(^|\b)([$A-Z_][0-9A-Z_$]*)(\.[$A-Z_][0-9A-Z_$]*)*(\b|$))/gi;
-								while(match = reg.exec(self._source)) {
-									if(inquote) {
-										if(match[0] == "\\\"" || match[0] == "\\'")
-											continue;
-										if(inquote == match[0])
-											inquote = false;
-										else
-											continue;
-									} else if(match[0] == "\"" || match[0] == "'")
-										inquote = match[0];
-									else if(variables.indexOf(match[3]) == -1 &&
-											IGNORED_KEYWORDS.indexOf(match[3]) == -1)
-										variables.push(match[3]);
-									else
-										continue;
-								}
-								
-								var modifiedSource = "(function(vmc) {"
-								variables.forEach(function(variable) {
-									modifiedSource += "var " + variable + " = vmc." + variable + ";";
-								});
-								modifiedSource += self._source + "})";
-								self._compiledScript = {
-									runInContext: eval(modifiedSource)
-								};
-							}
+                            self._source = "" + self._compiler.generateSource();
+                            if (USE_VM)
+                                self._compiledScript = vm.createScript(self._source, self._filename);
+                            else {
+                                var match: any, inquote: any = false, variables: Array<String> = [];
+                                var reg = /(\\?["']|(^|\b)([$A-Z_][0-9A-Z_$]*)(\.[$A-Z_][0-9A-Z_$]*)*(\b|$))/gi;
+                                while (match = reg.exec(self._source)) {
+                                    if (inquote) {
+                                        if (match[0] == "\\\"" || match[0] == "\\'")
+                                            continue;
+                                        if (inquote == match[0])
+                                            inquote = false;
+                                        else
+                                            continue;
+                                    } else if (match[0] == "\"" || match[0] == "'")
+                                        inquote = match[0];
+                                    else if (variables.indexOf(match[3]) == -1 &&
+                                        IGNORED_KEYWORDS.indexOf(match[3]) == -1)
+                                        variables.push(match[3]);
+                                    else
+                                        continue;
+                                }
+
+                                var modifiedSource = "(function(vmc) {"
+                                variables.forEach(function (variable) {
+                                    modifiedSource += "var " + variable + " = vmc." + variable + ";";
+                                });
+                                modifiedSource += self._source + "})";
+                                self._compiledScript = {
+                                    runInContext: eval(modifiedSource)
+                                };
+                            }
 
                             if (firstTime)
                                 self.emit("compiled");
@@ -148,36 +148,43 @@ export class Template extends events.EventEmitter {
         }
     }
 
-    public run(context:Object, out: stream.Writable, callback:Function, contextIsVMC:boolean) {
+    public run(context: Object, out: stream.Writable, callback: Function, contextIsVMC: boolean) {
         if (!this._compiledScript)
             throw new Error("Not compiled yet");
         if (this._compiledScript instanceof Error)
             throw this._compiledScript;
 
-        var vmc:any;
+        var vmc: {
+            env: any,
+            __done: Function,
+            __out: htmlparser2.Parser,
+            [key: string]: any
+        };
         if (contextIsVMC) {
-            vmc = context;
+            vmc = context as any;
             var oldDone = vmc.__done;
-            vmc.__done = function(err:Error) {
+            vmc.__done = function (err: Error) {
                 try {
                     callback(err);
                 } finally {
                     vmc.__done = oldDone;
-					callback = function(){};
+                    callback = function () {};
                 }
             };
         } else {
-			vmc = USE_VM ? vm.createContext() : {};
+            vmc = USE_VM ? vm.createContext() : {};
             _.merge(vmc, this._nhp.constants);
             vmc.env = {};
 
             var self = this;
             var options = this._nhp.options;
             if (options.tidyOutput) {
-                var realOut = out, parser:any;
-                var inTag = function(regex:RegExp) {
+                var realOut = out, parser: htmlparser2.Parser & {
+                    _stack: string[]
+                };
+                var inTag = function (regex: RegExp) {
                     try {
-                        parser._stack.forEach(function(tag:string) {
+                        parser._stack.forEach(function (tag: string) {
                             if (regex.test(tag))
                                 throw Template.$break;
                         });
@@ -188,11 +195,11 @@ export class Template extends events.EventEmitter {
                     }
                     return false;
                 };
-				var tagCache:any = {};
-                var updateTagCache = function() {
+                var tagCache: any = {};
+                var updateTagCache = function () {
                     tagCache.echo = (tagCache.raw = inTag(Template.rawElements)) || inTag(Template.echoElements);
                 };
-                var validComment:any;
+                var validComment: any;
                 var textTidyBuffer = "";
                 if (options.tidyComments) {
                     if (options.tidyComments == "not-if")
@@ -202,7 +209,7 @@ export class Template extends events.EventEmitter {
                 } else
                     validComment = /.+/;
                 var endsInSpace = /^.*\s$/, startsWithSpace = /^\s.*$/, endSpace = true;
-                var dumpBuffer = function() {
+                var dumpBuffer = function () {
                     if (textTidyBuffer) {
                         textTidyBuffer = textTidyBuffer.replace(/\s+/gm, " ");
                         var _endSpace = endsInSpace.test(textTidyBuffer);
@@ -216,7 +223,7 @@ export class Template extends events.EventEmitter {
                     }
                 }
                 parser = vmc.__out = new htmlparser2.Parser({
-                    onopentag: function(name, attribs) {
+                    onopentag: function (name, attribs) {
                         dumpBuffer();
                         updateTagCache();
 
@@ -233,57 +240,57 @@ export class Template extends events.EventEmitter {
                         else
                             realOut.write(">");
                     },
-                    ontext: function(text) {
+                    ontext: function (text) {
                         if (tagCache.raw)
                             realOut.write(text);
                         else
                             textTidyBuffer += text;
                     },
-                    onclosetag: function(name) {
+                    onclosetag: function (name) {
                         if (!Compiler.isVoidElement(name)) {
                             dumpBuffer();
                             realOut.write("</" + name + ">");
                         }
                         updateTagCache();
                     },
-                    onprocessinginstruction: function(name, data) {
+                    onprocessinginstruction: function (name, data) {
                         dumpBuffer();
                         realOut.write("<" + data + ">\n"); // Assume doctype
                         // TODO: Check if this is the first thing being written
                     },
-                    oncomment: function(data) {
+                    oncomment: function (data) {
                         if (validComment && validComment.test(data)) {
                             dumpBuffer();
                             realOut.write("<!--" + data + "-->");
                         }
                     },
-                    onerror: function(err) {
+                    onerror: function (err) {
                         logger.warning(err);
                         callback(err);
-                        callback = function(){};
+                        callback = function () {};
                     },
-                    onend: function() {
+                    onend: function () {
                         realOut.end();
                     }
-                });
+                }) as any;
             } else
-                vmc.__out = out;
+                vmc.__out = out as any;
             vmc._ = _;
-			vmc.__ = function(text:String):String {
-				return text;
-			};
-            vmc.__done = function() {
-				callback();
-				callback = function(){}
-			};
+            vmc.__ = function (text: String): String{
+                return text;
+            };
+            vmc.__done = function () {
+                callback();
+                callback = function () {}
+            };
             vmc.__series = async.series;
             vmc.__dirname = this._dirname;
             vmc.__filename = this._filename;
-            vmc.__each = function(eachOf:any, iterator:any, callback:any) {
+            vmc.__each = function (eachOf: any, iterator: any, callback: any) {
                 var calls = 0;
-                var iterate = function(entry:any, callback:Function) {
+                var iterate = function (entry: any, callback: Function) {
                     if (calls++ >= 50) {
-                        process.nextTick(function() {
+                        process.nextTick(function () {
                             iterator(entry, callback);
                         });
                         calls = 0;
@@ -296,7 +303,7 @@ export class Template extends events.EventEmitter {
                     else
                         async.eachSeries(eachOf, iterator, callback);
                 } else if (_.isObject(eachOf))
-                    async.eachSeries(_.keys(eachOf), function(key, callback) {
+                    async.eachSeries(_.keys(eachOf), function (key, callback) {
                         iterator({
                             "key": key,
                             "value": eachOf[key]
@@ -305,9 +312,9 @@ export class Template extends events.EventEmitter {
                 else
                     callback(); // Silently fail
             };
-            vmc.__if = function(segments:Array<any>, callback:any) {
-                var __next:Function, i = 0;
-                __next = function() {
+            vmc.__if = function (segments: Array<any>, callback: any) {
+                var __next: Function, i = 0;
+                __next = function () {
                     if (i < segments.length) {
                         var segment = segments[i++];
                         if (segment[0]())
@@ -319,25 +326,25 @@ export class Template extends events.EventEmitter {
                 }
                 __next();
             };
-            vmc.__add = function(to:string, what:any) {
+            vmc.__add = function (to: string, what: any) {
                 var arr = vmc.env[to];
                 if (!_.isArray(arr))
                     vmc.env[to] = arr = [];
                 arr.push(what);
             };
-            vmc.__set = function(what:string, to:any) {
+            vmc.__set = function (what: string, to: any) {
                 vmc.env[what] = to;
             };
-            vmc.__map = function(what:string, at:string, to:any) {
+            vmc.__map = function (what: string, at: string, to: any) {
                 var map = vmc.env[what];
                 if (!_.isObject(map))
                     vmc.env[what] = map = {};
                 map[at] = to;
             };
-            vmc.__get = function(what:string) {
+            vmc.__get = function (what: string) {
                 return vmc.env[what];
             };
-            vmc.__error = function(err:any, attr:any, triple:any) {
+            vmc.__error = function (err: any, attr: any, triple: any) {
                 err = "" + err;
                 if (attr) {
                     if (triple)
@@ -346,19 +353,24 @@ export class Template extends events.EventEmitter {
                 }
                 return "<error>" + Template.encodeHTML(err) + "</error>";
             }
-            vmc.__include = function(file:any, callback:any) {
+            vmc.__include = function (file: any, callback: any) {
                 logger.info("Including", file);
 
                 var template = self._nhp.template(path.resolve(self._dirname, file));
                 if (template.isCompiled())
-                    process.nextTick(function() {
+                    process.nextTick(function () {
                         template.run(vmc, out, callback, true);
                     });
                 else {
-                    template.once("compiled", function() {
+                    var onCompiled: Function, onError: Function;
+                    template.once("compiled", onCompiled = function () {
+                        template.removeListener("compiled", onCompiled);
+                        template.removeListener("error", onError);
                         template.run(vmc, out, callback, true);
                     });
-                    template.once("error", function(err:Error) {
+                    template.once("error", onError = function (err: Error) {
+                        template.removeListener("compiled", onCompiled);
+                        template.removeListener("error", onError);
                         logger.warning(err);
                         out.write(vmc.__error(err));
                         callback();
@@ -366,10 +378,10 @@ export class Template extends events.EventEmitter {
                 }
             }
             vmc.__encode = Template.encodeHTML;
-            vmc.__resolver = function(name:string, callback:Function) {
+            vmc.__resolver = function (name: string, callback: Function) {
                 self._nhp.resolver(name)(callback);
             }
-            vmc.__string = function(data:string, attr:boolean, triple:boolean) {
+            vmc.__string = function (data: string, attr: boolean, triple: boolean) {
                 data = "" + data;
                 if (attr) {
                     if (triple)

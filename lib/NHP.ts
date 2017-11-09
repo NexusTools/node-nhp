@@ -1,8 +1,9 @@
-/// <reference path="../node_modules/@types/node/index.d.ts" />
+/// <reference types="node" />
 
 import _ = require("lodash");
 import path = require("path");
 
+import {Instruction} from "./Instruction";
 import {Template} from "./Template";
 
 import {Set} from "./Instructions/Set";
@@ -22,18 +23,27 @@ import {EndIf} from "./Instructions/EndIf";
 
 import {Include} from "./Instructions/Include";
 
+interface Processor {
+    (data: string): Instruction;
+}
+
 var extension = /\.\w+$/;
+export interface NHPOptions {
+    tidyAttribs?: string[];
+    tidyComments?: string;
+    tidyOutput?: boolean;
+}
 export class NHP {
-    private static defaults: Object = {
+    private static defaults: NHPOptions = {
         tidyAttribs: ["false", "null", "undefined"],
         tidyComments: "not-if",
         tidyOutput: true
     }
 
-    options:any;
     constants:any;
-    private templates:any;
-    private static PROCESSORS:any = {
+    options: NHPOptions;
+    private templates: {[index: string]:Template};
+    private static PROCESSORS: {[index:string]: Processor} = {
         "set": function(data:string) {
             return new Set(data);
         },
@@ -81,16 +91,17 @@ export class NHP {
         return new NHP(constants);
     }
 
-    public constructor(constants:any={}, options:any={}) {
+    public constructor(constants:any={}, options?: NHPOptions) {
         if (!(this instanceof NHP))
             return new NHP(constants);
 
-		this.resolvers = {};
-		this.templates = {};
+        this.resolvers = {};
+        this.templates = {};
         this.constants = constants;
-        this.options = {};
+        this.options = {} as any;
         _.merge(this.options, NHP.defaults);
-        _.merge(this.options, options);
+        if(options)
+            _.merge(this.options, options);
     }
 
     public processingInstruction(name:string, data:string) {
