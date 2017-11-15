@@ -13,6 +13,10 @@ import { ElseIf } from "./Instructions/ElseIf";
 import { Else } from "./Instructions/Else";
 import { EndIf } from "./Instructions/EndIf";
 import { Include } from "./Instructions/Include";
+import { Echo } from "./Instructions/Echo";
+import { Translate } from "./Instructions/Translate";
+import { Moustache } from "./Instructions/Moustache";
+import { MoustacheResolver } from "./Instructions/MoustacheResolver";
 export interface Processor {
     (data: string): Instruction;
 }
@@ -35,6 +39,10 @@ export declare class NHP {
         Else: typeof Else;
         EndIf: typeof EndIf;
         Include: typeof Include;
+        Moustache: typeof Moustache;
+        MoustacheResolver: typeof MoustacheResolver;
+        Echo: typeof Echo;
+        Translate: typeof Translate;
     };
     private static defaults;
     constants: any;

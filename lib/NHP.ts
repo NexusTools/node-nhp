@@ -23,6 +23,12 @@ import {EndIf} from "./Instructions/EndIf";
 
 import {Include} from "./Instructions/Include";
 
+import {Echo} from "./Instructions/Echo";
+import {Translate} from "./Instructions/Translate";
+
+import {Moustache} from "./Instructions/Moustache";
+import {MoustacheResolver} from "./Instructions/MoustacheResolver";
+
 export interface Processor {
     (data: string): Instruction;
 }
@@ -35,7 +41,7 @@ export interface NHPOptions {
 }
 export class NHP {
     public static Instructions = {
-        Set, Add, Map, Exec, JSON, Each, Done, If, ElseIf, Else, EndIf, Include
+        Set, Add, Map, Exec, JSON, Each, Done, If, ElseIf, Else, EndIf, Include, Moustache, MoustacheResolver, Echo, Translate
     };
     
     private static defaults: NHPOptions = {
