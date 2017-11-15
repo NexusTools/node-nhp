@@ -130,15 +130,17 @@ export class NHP {
     }
 
     public processingInstruction(name: string, data: string) {
-        if (!(name in NHP.defaultProcessors))
-            throw new Error("No processor found with name `" + name + "`");
-        return NHP.defaultProcessors[name](data);
+        const processor = this.processors[name];
+        if (processor)
+            return processor;
+        throw new Error("No processor found with name `" + name + "`");
     }
 
     public resolver(name: string): any {
-        if (!(name in this.resolvers))
-            throw new Error("No resolver found with name `" + name + "`");
-        return this.resolvers[name];
+        const resolver = this.resolvers[name];
+        if (resolver)
+            return resolver;
+        throw new Error("No resolver found with name `" + name + "`");
     }
 
     public installResolver(name: string, resolver: Function) {

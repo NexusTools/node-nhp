@@ -55,7 +55,7 @@ export declare class NHP {
     private resolvers;
     static create(constants: Object): NHP;
     constructor(constants?: any, options?: NHPOptions);
-    processingInstruction(name: string, data: string): Instruction;
+    processingInstruction(name: string, data: string): Processor;
     resolver(name: string): any;
     installResolver(name: string, resolver: Function): void;
     installProcessor(key: string, processor: Processor): void;
