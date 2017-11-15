@@ -11,6 +11,7 @@ export declare class Template extends events.EventEmitter {
     private _dirname;
     private _filename;
     private _compiler;
+    private _cache;
     constructor(filename: string, nhp: NHP);
     render(options: any, cb: (err?: Error, html?: string) => void): void;
     renderToStream(options: any, stream: NodeJS.WritableStream, cb: (err?: Error) => void): void;
@@ -21,5 +22,5 @@ export declare class Template extends events.EventEmitter {
     };
     hasAsyncInstructions(): boolean;
     private compile();
-    run(context: Object, out: NodeJS.WritableStream, callback: (err?: Error) => void, contextIsVMC?: boolean): void;
+    run(context: any, out: NodeJS.WritableStream, callback: (err?: Error) => void, contextIsVMC?: boolean): void;
 }

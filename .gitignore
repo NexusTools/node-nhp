@@ -9,3 +9,4 @@
 *.bak
 *~
 /nbproject/private/
+/package.json.lock

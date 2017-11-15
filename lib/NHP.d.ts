@@ -1,6 +1,35 @@
 /// <reference types="node" />
 import { Instruction } from "./Instruction";
 import { Template } from "./Template";
+import { Set } from "./Instructions/Set";
+import { Add } from "./Instructions/Add";
+import { Map } from "./Instructions/Map";
+import { Exec } from "./Instructions/Exec";
+import { JSON } from "./Instructions/JSON";
+import { Each } from "./Instructions/Each";
+import { Done } from "./Instructions/Done";
+import { If } from "./Instructions/If";
+import { ElseIf } from "./Instructions/ElseIf";
+import { Else } from "./Instructions/Else";
+import { EndIf } from "./Instructions/EndIf";
+import { Include } from "./Instructions/Include";
+export interface Processor {
+    (data: string): Instruction;
+}
+export declare const Instructions: {
+    Set: typeof Set;
+    Add: typeof Add;
+    Map: typeof Map;
+    Exec: typeof Exec;
+    JSON: typeof JSON;
+    Each: typeof Each;
+    Done: typeof Done;
+    If: typeof If;
+    ElseIf: typeof ElseIf;
+    Else: typeof Else;
+    EndIf: typeof EndIf;
+    Include: typeof Include;
+};
 export interface NHPOptions {
     tidyAttribs?: string[];
     tidyComments?: string;
@@ -11,13 +40,17 @@ export declare class NHP {
     constants: any;
     options: NHPOptions;
     private templates;
-    private static PROCESSORS;
+    private processors;
+    static defaultProcessors: {
+        [index: string]: Processor;
+    };
     private resolvers;
     static create(constants: Object): NHP;
     constructor(constants?: any, options?: NHPOptions);
     processingInstruction(name: string, data: string): Instruction;
     resolver(name: string): any;
     installResolver(name: string, resolver: Function): void;
+    installProcessor(key: string, processor: Processor): void;
     setConstant(name: string, value: any): void;
     hasConstant(name: string): boolean;
     getConstant(name: string): any;

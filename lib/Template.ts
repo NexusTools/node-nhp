@@ -4,6 +4,7 @@ import log = require("nulllogger");
 import htmlparser2 = require("htmlparser2");
 import events = require("events");
 import { Writable } from "stream";
+import crypto = require('crypto');
 import async = require("async");
 import path = require("path");
 import _ = require("lodash");
@@ -29,6 +30,18 @@ class BufferedWritable extends Writable {
         callback();
     }
 }
+class SplitBufferedWritable extends Writable {
+    buffer = "";
+    out: NodeJS.WritableStream;
+    constructor(out: NodeJS.WritableStream) {
+        super();
+        this.out = out;
+    }
+    _write(chunk: any, encoding: string, callback: (err?: Error) => void) {
+        this.buffer += chunk.toString("utf8");
+        this.out.write(chunk, encoding, callback);
+    }
+}
 export class Template extends events.EventEmitter {
     private static echoElements = /(title|body|error)/;
     private static rawElements = /(textarea|script|style|pre)/;
@@ -40,6 +53,9 @@ export class Template extends events.EventEmitter {
     private _dirname: string;
     private _filename: string;
     private _compiler: Compiler;
+    private _cache: {
+        [index: string]: string
+    } = {};
     constructor(filename: string, nhp: NHP) {
         super();
 
@@ -56,10 +72,15 @@ export class Template extends events.EventEmitter {
         this.compile();
     }
     
-    
-
     public render(options: any, cb: (err?: Error, html?: string) => void) {
         const bufferedWritable = new BufferedWritable();
+        if(options && options.cache) {
+            var cache;
+            if(options.cache === true)
+                options.cache = crypto.createHash('md5').update(JSON.stringify(options)).digest("hex");
+            if(cache = this._cache[options.cache])
+                return cb(undefined, cache);
+        }
         this.renderToStream(options, bufferedWritable, function(err?: Error) {
             if(err)
                 cb(err);
@@ -192,7 +213,7 @@ export class Template extends events.EventEmitter {
         }
     }
 
-    public run(context: Object, out: NodeJS.WritableStream, callback: (err?: Error) => void, contextIsVMC?: boolean) {
+    public run(context: any, out: NodeJS.WritableStream, callback: (err?: Error) => void, contextIsVMC?: boolean) {
         if (!this._compiledScript)
             throw new Error("Not compiled yet");
         if (this._compiledScript instanceof Error)
@@ -205,7 +226,8 @@ export class Template extends events.EventEmitter {
             [key: string]: any
         };
         if (contextIsVMC) {
-            vmc = context as any;
+            vmc = context;
+            delete vmc.cache;
             var oldDone = vmc.__done;
             vmc.__done = function (err: Error) {
                 try {
@@ -216,6 +238,33 @@ export class Template extends events.EventEmitter {
                 }
             };
         } else {
+            if(context && context.cache) {
+                var cache: string;
+                if(context.cache === true)
+                    context.cache = crypto.createHash('md5').update(JSON.stringify(options, function(key, val) {
+                        if(key == "cache")
+                            return;
+                        return val;
+                    })).digest("hex");
+                if(cache = this._cache[context.cache]) {
+                    out.write(cache);
+                    return callback(undefined);
+                }
+                
+                const cb = callback;
+                cache = context.cache;
+                out = new SplitBufferedWritable(out);
+                callback = (err?: Error) => {
+                    if(err)
+                        cb(err);
+                    else {
+                        this._cache[cache] = (out as SplitBufferedWritable).buffer;
+                        cb();
+                    }
+                }
+                context.cache == true;
+            }
+        
             vmc = USE_VM ? vm.createContext() : {};
             _.merge(vmc, this._nhp.constants);
             vmc.env = {};

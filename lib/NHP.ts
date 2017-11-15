@@ -23,9 +23,13 @@ import {EndIf} from "./Instructions/EndIf";
 
 import {Include} from "./Instructions/Include";
 
-interface Processor {
+export interface Processor {
     (data: string): Instruction;
 }
+
+export const Instructions = {
+    Set, Add, Map, Exec, JSON, Each, Done, If, ElseIf, Else, EndIf, Include
+};
 
 var extension = /\.\w+$/;
 export interface NHPOptions {
@@ -43,7 +47,8 @@ export class NHP {
     constants: any;
     options: NHPOptions;
     private templates: {[index: string]: Template};
-    private static PROCESSORS: {[index: string]: Processor} = {
+    private processors: {[index: string]: Processor};
+    public static defaultProcessors: {[index: string]: Processor} = {
         "set": function (data: string) {
             return new Set(data);
         },
@@ -95,19 +100,33 @@ export class NHP {
         if (!(this instanceof NHP))
             return new NHP(constants);
 
-        this.resolvers = {};
-        this.templates = {};
-        this.constants = constants || {} as any;
-        this.options = {} as any;
+        Object.defineProperties(this, {
+            processors: {
+                value: {}
+            },
+            resolvers: {
+                value: {}
+            },
+            templates: {
+                value: {}
+            },
+            constants: {
+                value: constants || {}
+            },
+            options: {
+                value: {}
+            }
+        });
+        _.merge(this.processors, NHP.defaultProcessors);
         _.merge(this.options, NHP.defaults);
         if (options)
             _.merge(this.options, options);
     }
 
     public processingInstruction(name: string, data: string) {
-        if (!(name in NHP.PROCESSORS))
+        if (!(name in NHP.defaultProcessors))
             throw new Error("No processor found with name `" + name + "`");
-        return NHP.PROCESSORS[name](data);
+        return NHP.defaultProcessors[name](data);
     }
 
     public resolver(name: string): any {
@@ -118,6 +137,10 @@ export class NHP {
 
     public installResolver(name: string, resolver: Function) {
         this.resolvers[name] = resolver;
+    }
+    
+    public installProcessor(key: string, processor: Processor) {
+        this.processors[key] = processor;
     }
 
     public setConstant(name: string, value: any) {
