@@ -132,7 +132,7 @@ export class NHP {
     public processingInstruction(name: string, data: string) {
         const processor = this.processors[name];
         if (processor)
-            return processor;
+            return processor(data);
         throw new Error("No processor found with name `" + name + "`");
     }
 
