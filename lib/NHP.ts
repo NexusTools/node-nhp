@@ -27,10 +27,6 @@ export interface Processor {
     (data: string): Instruction;
 }
 
-export const Instructions = {
-    Set, Add, Map, Exec, JSON, Each, Done, If, ElseIf, Else, EndIf, Include
-};
-
 var extension = /\.\w+$/;
 export interface NHPOptions {
     tidyAttribs?: string[];
@@ -38,6 +34,10 @@ export interface NHPOptions {
     tidyOutput?: boolean;
 }
 export class NHP {
+    public static Instructions = {
+        Set, Add, Map, Exec, JSON, Each, Done, If, ElseIf, Else, EndIf, Include
+    };
+    
     private static defaults: NHPOptions = {
         tidyAttribs: ["false", "null", "undefined"],
         tidyComments: "not-if",

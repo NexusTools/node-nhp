@@ -16,26 +16,26 @@ import { Include } from "./Instructions/Include";
 export interface Processor {
     (data: string): Instruction;
 }
-export declare const Instructions: {
-    Set: typeof Set;
-    Add: typeof Add;
-    Map: typeof Map;
-    Exec: typeof Exec;
-    JSON: typeof JSON;
-    Each: typeof Each;
-    Done: typeof Done;
-    If: typeof If;
-    ElseIf: typeof ElseIf;
-    Else: typeof Else;
-    EndIf: typeof EndIf;
-    Include: typeof Include;
-};
 export interface NHPOptions {
     tidyAttribs?: string[];
     tidyComments?: string;
     tidyOutput?: boolean;
 }
 export declare class NHP {
+    static Instructions: {
+        Set: typeof Set;
+        Add: typeof Add;
+        Map: typeof Map;
+        Exec: typeof Exec;
+        JSON: typeof JSON;
+        Each: typeof Each;
+        Done: typeof Done;
+        If: typeof If;
+        ElseIf: typeof ElseIf;
+        Else: typeof Else;
+        EndIf: typeof EndIf;
+        Include: typeof Include;
+    };
     private static defaults;
     constants: any;
     options: NHPOptions;
