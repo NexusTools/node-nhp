@@ -8,6 +8,7 @@ import { Exec } from "./Instructions/Exec";
 import { JSON } from "./Instructions/JSON";
 import { Each } from "./Instructions/Each";
 import { Done } from "./Instructions/Done";
+import { Custom } from "./Instructions/Custom";
 import { If } from "./Instructions/If";
 import { ElseIf } from "./Instructions/ElseIf";
 import { Else } from "./Instructions/Else";
@@ -43,6 +44,7 @@ export declare class NHP {
         MoustacheResolver: typeof MoustacheResolver;
         Echo: typeof Echo;
         Translate: typeof Translate;
+        Custom: typeof Custom;
     };
     private static defaults;
     constants: any;

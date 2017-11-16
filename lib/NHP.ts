@@ -15,6 +15,7 @@ import {JSON} from "./Instructions/JSON";
 
 import {Each} from "./Instructions/Each";
 import {Done} from "./Instructions/Done";
+import {Custom} from "./Instructions/Custom";
 
 import {If} from "./Instructions/If";
 import {ElseIf} from "./Instructions/ElseIf";
@@ -41,7 +42,7 @@ export interface NHPOptions {
 }
 export class NHP {
     public static Instructions = {
-        Set, Add, Map, Exec, JSON, Each, Done, If, ElseIf, Else, EndIf, Include, Moustache, MoustacheResolver, Echo, Translate
+        Set, Add, Map, Exec, JSON, Each, Done, If, ElseIf, Else, EndIf, Include, Moustache, MoustacheResolver, Echo, Translate, Custom
     };
     
     private static defaults: NHPOptions = {
