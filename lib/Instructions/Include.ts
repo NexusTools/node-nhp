@@ -10,8 +10,9 @@ var logger = new log("nhp");
 
 export class Include implements Instruction {
     private _source: string;
+    private _root: string;
 
-    constructor(source: string) {
+    constructor(source: string, root?: string) {
         try {
             eval("(function(){return " + source + ";})"); // Verify it compiles
         } catch (e) {
@@ -20,6 +21,7 @@ export class Include implements Instruction {
         }
 
         this._source = source;
+        this._root = root;
     }
 
     save(): string {
@@ -37,7 +39,12 @@ export class Include implements Instruction {
     generateSource(): string {
         var source = "try{__include(";
         source += this._source;
-        source += ", __next);}catch(e){__out.write(__error(e));__next();};";
+        source += ", __next";
+        if (this._root) {
+            source += ", ";
+            source += JSON.stringify(this._root);
+        }
+        source += ");}catch(e){__out.write(__error(e));__next();};";
         return source;
     }
 
