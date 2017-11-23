@@ -19,6 +19,13 @@ export class Include implements Instruction {
             logger.error(e);
             throw new Error("Failed to compile source `" + source + "`");
         }
+        if (root)
+            try {
+                eval("(function(){return " + root + ";})"); // Verify it compiles
+            } catch (e) {
+                logger.error(e);
+                throw new Error("Failed to compile source `" + root + "`");
+            }
 
         this._source = source;
         this._root = root;
@@ -42,7 +49,7 @@ export class Include implements Instruction {
         source += ", __next";
         if (this._root) {
             source += ", ";
-            source += JSON.stringify(this._root);
+            source += this._root;
         }
         source += ");}catch(e){__out.write(__error(e));__next();};";
         return source;
