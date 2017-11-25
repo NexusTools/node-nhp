@@ -28,29 +28,8 @@ export class Add implements Instruction {
         }
     }
 
-    save(): string {
-        return JSON.stringify([this._what, this._to]);
-    }
-
-    load(data: string) {
-        var obj = JSON.parse(data);
-        this._what = obj[0];
-        this._to = obj[1];
-    }
-
-    process(source: string) {
-        throw new Error("This instruction can't process data");
-    }
-
     generateSource(): string {
-        return "try{__add(" + JSON.stringify(this._to) + ", " + this._what + ");__next();}catch(e){__out.write(__error(e));__next();};";
-    }
-
-    run(runtime: Runtime, out: stream.Writable, callback: Function) {
-    }
-
-    async(): boolean {
-        return false;
+        return "__add(" + JSON.stringify(this._to) + ", " + this._what + ");";
     }
 
 }

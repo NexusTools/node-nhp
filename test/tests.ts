@@ -4,7 +4,6 @@ import { NHP } from "../lib/NHP";
 import path = require('path');
 import "mocha";
 
-var compiledTemplate;
 describe('api', function () {
     var nhp = new NHP();
     var template: Template;

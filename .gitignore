@@ -1,6 +1,5 @@
 /nbproject/private
 /node_modules
-/typeinclude-cache
 /compiled
 /coverage
 /temp
@@ -9,4 +8,4 @@
 *.bak
 *~
 /nbproject/private/
-/package.json.lock
+/package-lock.json

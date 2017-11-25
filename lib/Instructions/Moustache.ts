@@ -1,12 +1,6 @@
 /// <reference types="node" />
 
 import {Instruction} from "../Instruction";
-import {Runtime} from "../Runtime"
-
-import log = require("nulllogger");
-import stream = require("stream");
-
-var logger = new log("nhp");
 
 export class Moustache implements Instruction {
     private _source: string;
@@ -17,23 +11,12 @@ export class Moustache implements Instruction {
         try {
             eval("(function(){return " + source + ";})"); // Verify it compiles
         } catch (e) {
-            logger.error(e);
-            throw new Error("Failed to compile source `" + source + "`");
+            throw new Error("Failed to compile source `" + source + "`: " + e);
         }
 
         this._source = source;
         this._attrib = attrib;
         this._raw = raw;
-    }
-
-    save(): string {
-        return this._source;
-    }
-
-    load(data: string) {}
-
-    process(source: string) {
-        this._source = source;
     }
 
     generateSource(): string {
@@ -44,21 +27,15 @@ export class Moustache implements Instruction {
                 source += ",true";
         } else if (this._raw)
             source += ",false,true";
-        source += "));}catch(e){__out.write(__error(e";
+        source += "))}catch(e){__out.write(__error(e";
         if (this._attrib) {
             source += ",true";
             if (this._raw)
                 source += ",true";
         } else if (this._raw)
             source += ",false,true";
-        source += "));};__next();";
+        source += "))}";
         return source
-    }
-
-    run(runtime: Runtime, out: stream.Writable) {}
-
-    async(): boolean {
-        return false;
     }
 
 }

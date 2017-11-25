@@ -11,6 +11,12 @@ export declare class Runtime {
     peek(): void;
     reset(): void;
     done(): void;
+    /**
+            Includes a file onto the runtime
+
+            @param file File to include
+            @param sandbox Whether or not to merge runtime contexts
+    */
     include(file: String, sandbox?: boolean): any;
     run(out: stream.Writable): void;
 }

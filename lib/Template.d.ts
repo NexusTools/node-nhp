@@ -11,16 +11,47 @@ export declare class Template extends events.EventEmitter {
     private _dirname;
     private _filename;
     private _compiler;
+    private _fswatcher;
     private _cache;
-    constructor(filename: string, nhp: NHP);
-    render(options: any, cb: (err?: Error, html?: string) => void): void;
-    renderToStream(options: any, stream: NodeJS.WritableStream, cb: (err?: Error) => void): void;
+    constructor(filename: string, nhp: NHP, mutable?: boolean);
+    /**
+     * Render this template and return HTML.
+     *
+     * @param locals The locals to use for rendering
+     * @param cb The callback
+     */
+    render(locals: any, cb: (err?: Error, html?: string) => void): void;
+    /**
+     * Render this template to a stream.
+     *
+     * @param locals The locals to use for rendering
+     * @param stream The target stream
+     * @param cb The callback
+     */
+    renderToStream(locals: any, stream: NodeJS.WritableStream, cb: (err?: Error) => void): void;
     static encodeHTML(html: string, attr?: boolean): string;
+    /**
+     * Get the last successfully generated JavaScript source for this template.
+     *
+     * @returns The source, or undefined if not compiled yet or an error occured.
+     */
     getSource(): string;
-    isCompiled(): {
-        runInContext: Function;
-    };
+    /**
+     * Check whether this template has been compiled or not.
+     *
+     * @returns True if compiled, False otherwise.
+     */
+    isCompiled(): boolean;
+    /**
+     * Check whether or not this template contains any async instructions.
+     */
     hasAsyncInstructions(): boolean;
     private compile();
+    /**
+     * Run this template in a given context.
+     *
+     *
+     */
     run(context: any, out: NodeJS.WritableStream, callback: (err?: Error) => void, contextIsVMC?: boolean): void;
+    destroy(): void;
 }

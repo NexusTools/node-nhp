@@ -41,7 +41,10 @@ export interface NHPOptions {
     tidyOutput?: boolean;
 }
 export class NHP {
-    public static Instructions = {
+    /**
+     * References to the built in Instructions
+     */
+    public static readonly Instructions = {
         Set, Add, Map, Exec, JSON, Each, Done, If, ElseIf, Else, EndIf, Include, Moustache, MoustacheResolver, Echo, Translate, Custom
     };
     
@@ -130,6 +133,12 @@ export class NHP {
             _.merge(this.options, options);
     }
 
+    /**
+     * Return a processing instruction for a processor by name and with data.
+     * 
+     * @param name The name of the processor
+     * @param data The data to pass to the processor
+     */
     public processingInstruction(name: string, data: string) {
         const processor = this.processors[name];
         if (processor)
@@ -148,40 +157,91 @@ export class NHP {
         this.resolvers[name] = resolver;
     }
     
+    /**
+     * Install a processor for key.
+     * 
+     * @param key The key to use
+     * @param processor The processor to install
+     */
     public installProcessor(key: string, processor: Processor) {
         this.processors[key] = processor;
     }
 
-    public setConstant(name: string, value: any) {
-        if (this.hasConstant(name))
-            throw new Error("Cannot redefine constant: " + name);
-        this.constants[name] = value;
+    /**
+     * Set or update a constant.
+     * 
+     * @param key The key for the constant
+     * @param value The value of the constant
+     */
+    public setConstant(key: string, value: any) {
+        if (this.hasConstant(key))
+            throw new Error("Cannot redefine constant: " + key);
+        this.constants[key] = value;
     }
 
-    public hasConstant(name: string) {
-        return name in this.constants;
+    /**
+     * Check whether or not a specific constant is set for a given key.
+     * 
+     * @param key The key
+     * @returns true if key is set, false otherwise
+     */
+    public hasConstant(key: string) {
+        return key in this.constants;
+    }
+    
+    /**
+     * Delete a constant for a specific key
+     * 
+     * @param key The key
+     * @returns true if deleted, false otherwise
+     */
+    public deleteConstant(key: string) {
+        return delete this.constants[key];
     }
 
-    public getConstant(name: string) {
+    /**
+     * Retreive a constant by key.
+     * 
+     * @param key The key
+     * @returns The value of the constant, or undefined
+     */
+    public constant(name: string) {
         return this.constants[name];
     }
 
-    public mixin(object: Object) {
-        _.merge(this.constants, object);
+    /**
+     * Assign the source object's properties to the constants for this NHP instance.
+     * 
+     * @param object The source object
+     */
+    public assignConstants(object: Object) {
+        _.assignIn(this.constants, object);
     }
 
-    public template(filename: string) {
+    /**
+     * Create or retreive a template associated to this NHP instance.
+     * 
+     * @param filename The template filename
+     * @param mutable Whether or not to watch for changes, true by default
+     */
+    public template(filename: string, mutable = true) {
         if (!extension.test(filename))
             filename += ".nhp";
         filename = path.resolve(filename);
 
         if (!(filename in this.templates))
-            return this.templates[filename] = new Template(filename, this);
+            return this.templates[filename] = new Template(filename, this, mutable);
 
         return this.templates[filename];
     }
 
-    public genSource(filename: string, options: any, cb: (err?: Error, source?: string) => void) {
+    /**
+     * Generate JavaScript source for a given NHP template.
+     * 
+     * @param filename The template filename
+     * @param cb The callback
+     */
+    public genSource(filename: string, cb: (err?: Error, source?: string) => void) {
         const template = this.template(filename);
         if (template.isCompiled())
             cb(undefined, template.getSource());
@@ -205,17 +265,34 @@ export class NHP {
         }
     }
 
+    /**
+     * Render a NHP template and return HTML
+     * 
+     * @param filename The filename
+     * @param locals The locals to use for rendering
+     * @param cb The callback
+     */
     public render(filename: string, options: any, cb: (err?: Error, html?: string) => void) {
         this.template(filename).render(options, cb);
     }
 
-    public renderToStream(filename: string, options: any, stream: NodeJS.WritableStream, cb: (err?: Error) => void) {
-        this.template(filename).renderToStream(options, stream, cb);
+    /**
+     * Render a NHP template to a stream
+     * 
+     * @param filename The filename
+     * @param locals The locals to use for rendering
+     * @param stream The target stream
+     * @param cb The callback
+     */
+    public renderToStream(filename: string, locals: any, stream: NodeJS.WritableStream, cb: (err?: Error) => void) {
+        this.template(filename).renderToStream(locals, stream, cb);
     }
 
-    public static __express(options?: NHPOptions) {
-        const nhp = new NHP({}, options);
-        return nhp.render.bind(nhp);
+    /**
+     * Create an express handler out of this NHP instance.
+     */
+    public __express() {
+        return this.render.bind(this);
     }
 
 }

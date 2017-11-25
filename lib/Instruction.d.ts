@@ -1,14 +1,21 @@
-/// <reference types="node" />
-import stream = require("stream");
-import { Runtime } from "./Runtime";
+/**
+ * A single instruction in a NHP template;
+ */
 export interface Instruction {
-    save(): string;
-    load(data: string): void;
-    process(source: string): void;
+    /**
+     * Generate JavaScript source for this Instruction.
+     *
+     * @param stackControl A object for controlling the stack of the runtime
+     * @returns A string containing JavaScript for this Instruction
+     */
     generateSource(stackControl: {
         push: Function;
         pop: Function;
     }): string;
-    run(runtime: Runtime, out: stream.Writable, callback: Function): void;
+    /**
+     * Check whether or not this instruction requires an async context.
+     *
+     * @returns True if async required, False otherwise
+     */
     async(): boolean;
 }

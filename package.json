@@ -2,7 +2,7 @@
     "name": "nhp",
     "author": "NexusTools",
     "homepage": "https://www.nexustools.net/projects#nhp",
-    "version": "0.8.10",
+    "version": "0.9.0-beta.0",
     "licenses": [
         {
             "type": "Apache License 2.0",
@@ -39,12 +39,14 @@
     },
     "dependencies": {
         "async": "^2.6.0",
+        "chokidar": "^1.7.0",
         "htmlparser2": "^3.9.2",
-        "nulllogger": "^0.5.2",
-        "lodash": "^4.17.4"
+        "lodash": "^4.17.4",
+        "nulllogger": "^0.5.2"
     },
     "devDependencies": {
         "@types/async": "^2.0.45",
+        "@types/chokidar": "^1.7.3",
         "@types/htmlparser2": "^3.7.31",
         "@types/lodash": "^4.14.85",
         "@types/mocha": "^2.2.44",
