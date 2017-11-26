@@ -198,27 +198,31 @@ export class Compiler {
     }
 
     public generateSource() {
-        var stack: [{first: boolean, popped: boolean, pushed: boolean, data?: Object}] = [{
-            first: true,
+        var stack: [{top: boolean, popped: boolean, pushed: boolean, data?: Object}] = [{
+            top: true,
             popped: false,
-            pushed: false
+            pushed: false,
+            data: {}
         }];
         const stackControl = {
-            push: function (data?: Object) {
+            push: function (data: Object = {}) {
                 var frame = stack[stack.length - 1];
                 stack.push({
-                    first: frame.first,
+                    top: frame.top,
                     popped: frame.popped,
                     pushed: true,
                     data
                 });
             },
-            pop: function () {
+            pop: function (newData?: Object) {
                 if (stack.length < 2)
                     throw new Error("Cannot pop anymore frames from the stack...");
 
-                const data = stack.pop().data || {};
-                stack[stack.length - 1].popped = true;
+                const data = stack.pop().data;
+                const next = stack[stack.length - 1];
+                if (next)
+                    _.assign(next.data, newData);
+                next.popped = true;
                 return data;
             }
         };
@@ -238,17 +242,17 @@ export class Compiler {
         if (async)
             source += "__series([";
         this._instructions.forEach(function (instruction: Instruction) {
-            var instructionSource = instruction.generateSource(stackControl);
+            var instructionSource = instruction.generateSource(stackControl, async);
             var frame = stack[stack.length - 1];
 
             if (!frame.popped) {
-                if (frame.first)
-                    frame.first = false;
+                if (frame.top)
+                    frame.top = false;
                 else if (async)
                     source += ",";
             }
             if (frame.pushed)
-                frame.first = true;
+                frame.top = true;
 
             if (!frame.popped) {
                 if (async)
@@ -259,12 +263,13 @@ export class Compiler {
             source += instructionSource;
             if (!frame.pushed) {
                 if (async) {
-                    if (!instruction.async && !frame.popped)
+                    if (!instruction.async && !frame.data['omitcb'])
                         source += "__next()";
                     source += "}";
                 }
             } else if (async)
                 source += "__series([";
+            delete frame.data['omitcb'];
             delete frame.pushed;
             delete frame.popped;
         });

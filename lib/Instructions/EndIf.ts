@@ -6,8 +6,8 @@ export class EndIf implements Instruction {
     readonly usesStackControl = true;
     constructor() {}
 
-    generateSource(stackControl: StackControl): string {
-        if (stackControl.pop().else)
+    generateSource(stackControl: StackControl, asyncContext: boolean): string {
+        if (stackControl.pop({omitcb:true})['else'] || !asyncContext)
             return "}";
         return "}else{__next()}"
     }
