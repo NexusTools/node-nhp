@@ -1,14 +1,15 @@
 /// <reference types="node" />
 
-import {Instruction} from "../Instruction";
+import {Instruction,StackControl} from "../Instruction";
 
 export class EndIf implements Instruction {
     readonly usesStackControl = true;
     constructor() {}
 
-    generateSource(stackControl: {push: Function, pop: Function}): string {
-        stackControl.pop();
-        return "}";
+    generateSource(stackControl: StackControl): string {
+        if (stackControl.pop().else)
+            return "}";
+        return "}else{__next()}"
     }
 
 }

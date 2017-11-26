@@ -14,6 +14,14 @@
 
 	<a href="http://something/{{{env.type}}}">{{type}}</a>
 <ul><?include "entries"?></ul>
+
+<?if true?>
+Relaxing
+<?endif?>
+
+<?if false?>
+Sundays
+<?endif?>
 	
 <?map names "Jeff" 3?>
 <?map names "Date" Date.now()?>

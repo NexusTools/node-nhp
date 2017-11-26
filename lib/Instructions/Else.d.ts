@@ -1,9 +1,6 @@
-import { Instruction } from "../Instruction";
+import { Instruction, StackControl } from "../Instruction";
 export declare class Else implements Instruction {
     readonly usesStackControl: boolean;
     constructor();
-    generateSource(stackControl: {
-        push: Function;
-        pop: Function;
-    }): string;
+    generateSource(stackControl: StackControl): string;
 }

@@ -198,26 +198,28 @@ export class Compiler {
     }
 
     public generateSource() {
-        var stack: [{first: boolean, popped: boolean, pushed: boolean}] = [{
+        var stack: [{first: boolean, popped: boolean, pushed: boolean, data?: Object}] = [{
             first: true,
             popped: false,
             pushed: false
         }];
         const stackControl = {
-            push: function () {
+            push: function (data?: Object) {
                 var frame = stack[stack.length - 1];
                 stack.push({
                     first: frame.first,
                     popped: frame.popped,
-                    pushed: true
+                    pushed: true,
+                    data
                 });
             },
             pop: function () {
                 if (stack.length < 2)
                     throw new Error("Cannot pop anymore frames from the stack...");
 
-                stack.pop();
+                const data = stack.pop().data || {};
                 stack[stack.length - 1].popped = true;
+                return data;
             }
         };
         var source = "";

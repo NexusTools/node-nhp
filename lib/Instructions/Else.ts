@@ -1,15 +1,15 @@
 /// <reference types="node" />
 
-import {Instruction} from "../Instruction";
+import {Instruction,StackControl} from "../Instruction";
 
 export class Else implements Instruction {
     readonly usesStackControl = true;
     
     constructor() {}
 
-    generateSource(stackControl: {push: Function, pop: Function}): string {
+    generateSource(stackControl: StackControl): string {
         stackControl.pop();
-        stackControl.push();
+        stackControl.push({else:true});
         return "} else {";
     }
 

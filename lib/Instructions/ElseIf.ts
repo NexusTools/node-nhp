@@ -19,7 +19,7 @@ export class ElseIf implements Instruction {
     generateSource(stackControl: {push: Function, pop: Function}): string {
         stackControl.pop();
         stackControl.push();
-        return "} else if(" + this._condition + ") {";
+        return "}else if(" + this._condition + "){";
     }
 
 }

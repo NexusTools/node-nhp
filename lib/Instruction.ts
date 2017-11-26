@@ -1,8 +1,8 @@
 /// <reference types="node" />
 
 export interface StackControl {
-    push(): void;
-    pop(): void;
+    push(data?: Object): void;
+    pop(): Object;
 }
 /**
  * A single instruction in a NHP template;
