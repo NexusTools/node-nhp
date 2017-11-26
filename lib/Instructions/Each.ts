@@ -1,6 +1,6 @@
 /// <reference types="node" />
 
-import {Instruction} from "../Instruction";
+import {Instruction,StackControl} from "../Instruction";
 
 export class Each implements Instruction {
     readonly async = true;
@@ -16,9 +16,9 @@ export class Each implements Instruction {
         this._eachOf = eachOf;
     }
 
-    generateSource(stackControl: {push: Function, pop: Function}): string {
+    generateSource(stackControl: StackControl): string {
         stackControl.push();
-        return "__each(" + this._eachOf + ", [";
+        return "__each(" + this._eachOf + ", function(entry, __next) {";
     }
 
 }

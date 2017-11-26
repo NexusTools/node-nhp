@@ -9,7 +9,7 @@ export class Done implements Instruction {
 
     generateSource(stackControl: {push: Function, pop: Function}): string {
         stackControl.pop();
-        return "], __next);";
+        return "}, __next);";
     }
 
 }

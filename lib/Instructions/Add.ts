@@ -1,12 +1,6 @@
 /// <reference types="node" />
 
 import {Instruction} from "../Instruction";
-import {Runtime} from "../Runtime"
-
-import log = require("nulllogger");
-import stream = require("stream");
-
-var logger = new log("nhp");
 
 var syntax = /^([^\s]+)\s(.+)$/;
 export class Add implements Instruction {
@@ -23,8 +17,7 @@ export class Add implements Instruction {
         try {
             eval("(function(){return " + this._what + ";})"); // Verify it compiles
         } catch (e) {
-            logger.error(e);
-            throw new Error("Failed to compile source `" + this._what + "`");
+            throw new Error("Failed to compile source `" + this._what + "`: " + e);
         }
     }
 

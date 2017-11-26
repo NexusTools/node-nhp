@@ -1,5 +1,9 @@
 /// <reference types="node" />
 
+export interface StackControl {
+    push(): void;
+    pop(): void;
+}
 /**
  * A single instruction in a NHP template;
  */
@@ -19,5 +23,5 @@ export interface Instruction {
      * @param stackControl A object for controlling the stack of the runtime
      * @returns A string containing JavaScript for this Instruction
      */
-    generateSource(stackControl:{push:Function, pop:Function}): string;
+    generateSource(stackControl: StackControl): string;
 }

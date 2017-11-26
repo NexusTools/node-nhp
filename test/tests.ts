@@ -1,5 +1,6 @@
 require("source-map-support").install();
 import { Template } from "../lib/Template";
+import assert = require('assert');
 import { NHP } from "../lib/NHP";
 import path = require('path');
 import "mocha";
@@ -13,7 +14,7 @@ describe('api', function () {
         template.on("error", done);
     });
     it('run test', function (done) {
-        template.run({
+        template.render({
             platform: "nodejs",
             title: "Many people",
             entries: [
@@ -26,14 +27,14 @@ describe('api', function () {
             ],
             html: "<textarea></textarea>",
             name: false
-        }, process.stdout, function (err) {
-            if (err) {
+        }, function(err, html) {
+            console.log(html);
+            if (err)
                 done(err);
-                return;
+            else {
+                assert.ok(html.indexOf("Father Harrington") > -1);
+                done();
             }
-
-            process.stdout.write("\n");
-            done();
         });
     });
     it('compile false.nhp', function (done) {
@@ -42,33 +43,31 @@ describe('api', function () {
         template.on("error", done);
     });
     it('test false.nhp', function (done) {
-        template.run({
+        template.render({
             platform: "nodejs",
             name: false
-        }, process.stdout, function (err) {
+        }, function (err, html) {
             if (err) {
                 done(err);
                 return;
             }
 
-            process.stdout.write("\n");
             done();
         });
     });
     it('translate false.nhp', function (done) {
-        template.run({
+        template.render({
             __: function (text: string) {
                 return text.replace(/Entry/ig, "Soup");
             },
             platform: "nodejs",
             name: false
-        }, process.stdout, function (err) {
+        }, function (err, html) {
             if (err) {
                 done(err);
                 return;
             }
 
-            process.stdout.write("\n");
             done();
         });
     });

@@ -10,7 +10,7 @@ export class Bundle implements Instruction {
     generateSource(): string {
         var source = "";
         this.bundle.forEach(function(instruction) {
-            source += instruction.generateSource();
+            source += instruction.generateSource(undefined);
         })
         return source;
     }

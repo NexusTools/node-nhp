@@ -42,16 +42,7 @@ export declare class Template extends events.EventEmitter {
      * @returns True if compiled, False otherwise.
      */
     isCompiled(): boolean;
-    /**
-     * Check whether or not this template contains any async instructions.
-     */
-    hasAsyncInstructions(): boolean;
     private compile();
-    /**
-     * Run this template in a given context.
-     *
-     *
-     */
-    run(context: any, out: NodeJS.WritableStream, callback: (err?: Error) => void, contextIsVMC?: boolean): void;
+    protected run(context: any, out: NodeJS.WritableStream, callback: (err?: Error) => void): void;
     destroy(): void;
 }

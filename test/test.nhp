@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html><?set title "Many people"?><?include "head"?><body>
     {{name || "Father Harrington"}}
-	{{#lookup}} {{Date.now()}}
+    {{#lookup}} {{Date.now()}}
 
 <?if Date.now() < 200?>
-	<?set type "Juggler ^__^"?>
+    <?set type "Juggler ^__^"?>
 <?else?>
-	<?set type "Driver 6002"?>
+    <?set type "Driver 6002"?>
 <?endif?>
 
     {{html}}
@@ -19,8 +19,8 @@
 <?map names "Date" Date.now()?>
 <?map names "Sam"?>
 <ul><?each env.names?>
-	<li>
-		{{entry.key}} - {{entry.value}}
-	</li>
+    <li>
+        {{entry.key}} - {{entry.value}}
+    </li>
 <?done?></ul>
 <?include "foot"?></body></html>

@@ -94,8 +94,10 @@ export class Compiler {
                 compiler._instructions.push(new Moustache(moustache, attrib, raw));
             at = end + size;
         }
-        if (at < text.length)
-            compiler._instructions.push(attrib ? new Echo(text.substring(at)) : new Translate(text.substring(at)));
+        if (at < text.length) {
+            const snippet = text.substring(at);
+            compiler._instructions.push(attrib || !/[a-z]/i.test(snippet) ? new Echo(snippet) : new Translate(snippet));
+        }
     }
 
     private cancelActive: Function;
@@ -251,25 +253,23 @@ export class Compiler {
                     source += "function(__next){";
             } else {
                 source += "], __next)";
-                delete frame.popped;
             }
             source += instructionSource;
             if (!frame.pushed) {
                 if (async) {
-                    if (!instruction.async)
+                    if (!instruction.async && !frame.popped)
                         source += "__next()";
                     source += "}";
                 }
-            } else {
-                if (async)
-                    source += "__series([";
-                delete frame.pushed;
-            }
+            } else if (async)
+                source += "__series([";
+            delete frame.pushed;
+            delete frame.popped;
         });
         if (async)
-            source += "], __done)";
+            source += "], __next)";
         else
-            source += "__done()";
+            source += "__next()";
             
         return source;
     }
@@ -303,6 +303,7 @@ export class Compiler {
                         optimized.push(new Bundle(syncStack));
                     else
                         optimized.push(syncStack[0]);
+                    syncStack = [];
                 }
             }
             this._instructions.forEach(function (instruction) {

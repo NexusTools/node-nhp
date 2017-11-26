@@ -44,7 +44,7 @@ export class Template extends events.EventEmitter {
 
     private _nhp: NHP;
     private _source: string;
-    private _compiledScript: (context: any) => void;
+    private _compiledScript: (context: any, callback: (err?: Error) => void) => void;
     private _dirname: string;
     private _filename: string;
     private _compiler: Compiler;
@@ -83,13 +83,13 @@ export class Template extends events.EventEmitter {
      */
     public render(locals: any, cb: (err?: Error, html?: string) => void) {
         const bufferedWritable = new BufferedWritable();
-        if(locals && locals.cache) {
-            var cache;
-            if(locals.cache === true)
-                locals.cache = crypto.createHash('md5').update(JSON.stringify(locals)).digest("hex");
-            if(cache = this._cache[locals.cache])
-                return cb(undefined, cache);
-        }
+//        if(locals && locals.cache) {
+//            var cache;
+//            if(locals.cache === true)
+//                locals.cache = crypto.createHash('md5').update(JSON.stringify(locals)).digest("hex");
+//            if(cache = this._cache[locals.cache])
+//                return cb(undefined, cache);
+//        }
         this.renderToStream(locals, bufferedWritable, function(err?: Error) {
             if(err)
                 cb(err);
@@ -109,21 +109,16 @@ export class Template extends events.EventEmitter {
         if (this.isCompiled())
             this.run(locals, stream, cb);
         else {
-            var timeout: NodeJS.Timer;
             var onCompiled: Function, onError: Function;
-            const _cb = (err?: Error) => {
+            this.on("compiled", onCompiled = () => {
+                this.removeListener("compiled", onCompiled as any);
+                this.removeListener("error", onError as any);
+                this.run(locals, stream, cb);
+            });
+            this.on("error", onError = (err: Error) => {
                 this.removeListener("compiled", onCompiled as any);
                 this.removeListener("error", onError as any);
                 cb(err);
-            }
-            this.on("compiled", onCompiled = () => {
-                timeout = setTimeout(() => {
-                    this.run(locals, stream, _cb);
-                }, 10);
-            });
-            this.on("error", onError = function(err: Error) {
-                try{clearTimeout(timeout);}catch(e){}
-                _cb(err);
             });
         }
     }
@@ -152,13 +147,6 @@ export class Template extends events.EventEmitter {
      */
     public isCompiled() {
         return !!this._compiledScript;
-    }
-
-    /**
-     * Check whether or not this template contains any async instructions.
-     */
-    public hasAsyncInstructions() {
-        return true;
     }
 
     private compile() {
@@ -203,11 +191,12 @@ export class Template extends events.EventEmitter {
                                     continue;
                             }
 
-                            var modifiedSource = "(function(vmc) {"
+                            const basename = path.basename(self._filename);
+                            var modifiedSource = "(function " + basename.replace(/\W+/g, "_") + "(vmc, __next) {"
                             variables.forEach(function (variable) {
-                                modifiedSource += "var " + variable + " = vmc." + variable + ";";
+                                modifiedSource += "const " + variable + " = vmc." + variable + ";";
                             });
-                            modifiedSource += self._source + "})";
+                            modifiedSource += self._source + "})\n//# sourceURL=" + path.basename(self._filename) + ".js";
                             self._compiledScript = eval(modifiedSource);
 
                             if (firstTime)
@@ -236,12 +225,8 @@ export class Template extends events.EventEmitter {
         }
     }
 
-    /**
-     * Run this template in a given context.
-     * 
-     * 
-     */
-    public run(context: any, out: NodeJS.WritableStream, callback: (err?: Error) => void, contextIsVMC?: boolean) {
+    
+    protected run(context: any, out: NodeJS.WritableStream, callback: (err?: Error) => void) {
         if (!this._compiledScript)
             throw new Error("Not compiled yet");
         if (this._compiledScript instanceof Error)
@@ -249,40 +234,41 @@ export class Template extends events.EventEmitter {
 
         var vmc: {
             env: any,
-            __done: Function,
+            __next: Function,
             __out: htmlparser2.Parser,
             [key: string]: any
         };
-        if(context && context.cache) {
-            var cache: string;
-            if(context.cache === true)
-                context.cache = crypto.createHash('md5').update(JSON.stringify(options, function(key, val) {
-                    if(key == "cache")
-                        return;
-                    return val;
-                })).digest("hex");
-            if(cache = this._cache[context.cache]) {
-                out.write(cache);
-                return callback(undefined);
-            }
-
-            const cb = callback;
-            cache = context.cache;
-            out = new SplitBufferedWritable(out);
-            callback = (err?: Error) => {
-                if(err)
-                    cb(err);
-                else {
-                    this._cache[cache] = (out as SplitBufferedWritable).buffer;
-                    cb();
-                }
-            }
-            context.cache == true;
-        }
-
+        
+//        if(context && context.cache) {
+//            var cache: string;
+//            if(context.cache === true)
+//                context.cache = crypto.createHash('md5').update(JSON.stringify(options, function(key, val) {
+//                    if(key == "cache")
+//                        return;
+//                    return val;
+//                })).digest("hex");
+//            if(cache = this._cache[context.cache]) {
+//                out.write(cache);
+//                return callback(undefined);
+//            }
+//
+//            const cb = callback;
+//            cache = context.cache;
+//            out = new SplitBufferedWritable(out);
+//            callback = (err?: Error) => {
+//                if(err)
+//                    cb(err);
+//                else {
+//                    this._cache[cache] = (out as SplitBufferedWritable).buffer;
+//                    cb();
+//                }
+//            }
+//            context.cache == true;
+//        }
+        
         vmc = {} as any;
-        _.merge(vmc, this._nhp.constants);
-        vmc.env = {};
+        _.assign(vmc, this._nhp.constants);
+        vmc.env = vmc.env || {};
 
         var self = this;
         var options = this._nhp.options;
@@ -387,33 +373,21 @@ export class Template extends events.EventEmitter {
         vmc.__ = function (text: String): String{
             return text;
         };
-        vmc.__done = function () {
-            callback();
-            callback = function () {}
-        };
         vmc.__series = async.series;
         vmc.__dirname = this._dirname;
         vmc.__filename = this._filename;
-        vmc.__each = function (eachOf: any, instructions: Function[], callback: any) {
-            const iterator = instructions.length > 1 ? function(entry: any, callback: Function) {
-                async.series(iterator, function(it, callback) {
-                    it(entry, callback);
-                }, callback);
-            } : instructions[0];
-            
+        vmc.__each = function (eachOf: any, iterator: (entry: any, callback: Function) => void, callback: (err?: Error) => void) {
             var calls = 0;
-            var iterate = function (entry: any, callback: Function) {
-                if (calls++ >= 50) {
-                    process.nextTick(function () {
-                        iterator(entry, callback);
-                    });
-                    calls = 0;
-                } else
-                    iterator(entry, callback);
-            }
             if (_.isArray(eachOf)) {
                 if (eachOf.length > 50)
-                    async.eachSeries(eachOf, iterate, callback);
+                    async.eachSeries(eachOf, function (entry: any, callback: Function) {
+                        if (!(calls++ % 50))
+                            process.nextTick(function () {
+                                iterator(entry, callback);
+                            });
+                        else
+                            iterator(entry, callback);
+                    }, callback);
                 else
                     async.eachSeries(eachOf, iterator, callback);
             } else if (_.isObject(eachOf))
@@ -456,27 +430,20 @@ export class Template extends events.EventEmitter {
         vmc.__include = function (file: any, cb: any, root?: string) {
             var template = self._nhp.template(path.resolve(root || self._dirname, file));
             if (template.isCompiled())
-                process.nextTick(function () {
-                    template.run(vmc, out, cb, true);
-                });
+                template._compiledScript(vmc, cb);
             else {
-                var timeout: NodeJS.Timer;
                 var onCompiled: Function, onError: Function;
-                const _cb = function() {
+                template.once("compiled", onCompiled = function () {
                     template.removeListener("compiled", onCompiled as any);
                     template.removeListener("error", onError as any);
-                    cb();
-                };
-                template.once("compiled", onCompiled = function () {
-                    timeout = setTimeout(function() {
-                        template.run(vmc, out, _cb, true);
-                    }, 100);
+                    template._compiledScript(vmc, cb);
                 });
                 template.once("error", onError = function (err: Error) {
-                    try{clearTimeout(timeout);}catch(e){}
+                    template.removeListener("compiled", onCompiled as any);
+                    template.removeListener("error", onError as any);
                     out.write(vmc.__error(err));
                     logger.warning(err);
-                    _cb();
+                    cb();
                 });
             }
         }
@@ -494,9 +461,9 @@ export class Template extends events.EventEmitter {
                 return data;
             return Template.encodeHTML(data);
         }
-        _.merge(vmc, context);
+        _.assign(vmc, context);
         
-        this._compiledScript(vmc);
+        this._compiledScript(vmc, callback);
     }
     
     destroy() {

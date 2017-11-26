@@ -6,6 +6,7 @@ export class JSON implements Instruction {
     private _source: string;
 
     constructor(source: string) {
+        this._source = source;
         try {
             eval("(function(){return " + source + ";})"); // Verify it compiles
         } catch (e) {
@@ -14,9 +15,9 @@ export class JSON implements Instruction {
     }
 
     generateSource(): string {
-        var source = "try{__out.write(JSON.stringify(" + this._source;
-        source += "))}catch(e){__out.write(__error(e";
-        source += "))}";
+        var source = "try{__out.write(JSON.stringify(";
+        source += this._source;
+        source += "))}catch(e){__out.write(__error(e))}";
         return source;
     }
 
