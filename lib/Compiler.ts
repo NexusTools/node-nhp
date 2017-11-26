@@ -226,7 +226,7 @@ export class Compiler {
                 return data;
             }
         };
-        var source = "";
+        var source: string;
         var async = false;
         try {
             this._instructions.forEach(function (instruction: Instruction) {
@@ -240,7 +240,9 @@ export class Compiler {
         }
         
         if (async)
-            source += "__series([";
+            source = "__series([";
+        else
+            source = "try{";
         this._instructions.forEach(function (instruction: Instruction) {
             var instructionSource = instruction.generateSource(stackControl, async);
             var frame = stack[stack.length - 1];
@@ -254,12 +256,14 @@ export class Compiler {
             if (frame.pushed)
                 frame.top = true;
 
-            if (!frame.popped) {
-                if (async)
+            if (async) {
+                if (frame.popped) {
+                    source += "], __next)";
+                } else if(async) {
                     source += "function(__next){";
-            } else {
-                source += "], __next)";
+                }
             }
+                
             source += instructionSource;
             if (!frame.pushed) {
                 if (async) {
@@ -276,7 +280,7 @@ export class Compiler {
         if (async)
             source += "], __next)";
         else
-            source += "__next()";
+            source += "__next()}catch(e){__next(e)}";
             
         return source;
     }
