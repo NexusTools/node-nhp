@@ -247,20 +247,20 @@ export class Compiler {
             var instructionSource = instruction.generateSource(stackControl, async);
             var frame = stack[stack.length - 1];
 
-            if (frame.first)
-                frame.first = false;
-            else if (async && !frame.data['omitcomma'])
-                source += ",";
-            if (frame.pushed)
-                frame.first = true;
-
             if (async) {
                 if (frame.popped) {
                     source += "], __next)";
                 } else if(async) {
+                    if (frame.first && !frame.data['omitcomma'])
+                        source += ",";
                     source += "function(__next){";
                 }
             }
+
+            if (frame.first)
+                frame.first = false;
+            if (frame.pushed)
+                frame.first = true;
                 
             source += instructionSource;
             if (!frame.pushed) {

@@ -427,7 +427,12 @@ export class Template extends events.EventEmitter {
             }
             return "<error>" + Template.encodeHTML(err) + "</error>";
         }
-        vmc.__include = function (file: any, cb: any, root?: string) {
+        vmc.__include = function (file: any, _cb: any, root?: string) {
+            const cb = function(err?: Error) {
+                if (err)
+                    vmc.__out.write(vmc.__error(err));
+                _cb();
+            }
             var template = self._nhp.template(path.resolve(root || self._dirname, file));
             if (template.isCompiled())
                 template._compiledScript(vmc, cb);
