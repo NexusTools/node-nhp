@@ -246,17 +246,18 @@ export class Compiler {
         this._instructions.forEach(function (instruction: Instruction) {
             var instructionSource = instruction.generateSource(stackControl, async);
             var frame = stack[stack.length - 1];
-
+                
+                
             if (async) {
                 if (frame.popped) {
                     source += "], __next)";
-                } else if(async) {
-                    if (frame.first && !frame.data['omitcomma'])
+                } else {
+                    if (!frame.first)
                         source += ",";
                     source += "function(__next){";
                 }
             }
-
+            
             if (frame.first)
                 frame.first = false;
             if (frame.pushed)
