@@ -2,7 +2,7 @@
     "name": "nhp",
     "author": "NexusTools",
     "homepage": "https://www.nexustools.net/projects#nhp",
-    "version": "0.9.0-beta.4",
+    "version": "0.9.0-beta.5",
     "licenses": [
         {
             "type": "Apache License 2.0",
@@ -29,6 +29,7 @@
     },
     "scripts": {
         "test": "mocha --timeout 40000 --require test/support/env --reporter spec --globals __typeinclude__ --check-leaks test/",
+        "test-coverage": "istanbul cover node_modules/mocha/bin/_mocha --timeout 40000 --require test/support/env --reporter spec --globals __typeinclude__ --check-leaks test/",
         "test-travis": "istanbul cover node_modules/mocha/bin/_mocha --report lcovonly --  --timeout 100000 --require test/support/env --reporter spec --globals __typeinclude__ --check-leaks test/"
     },
     "preferGlobal": true,

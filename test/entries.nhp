@@ -1,3 +1,7 @@
 <?each entries?>
-	<li>{{entry}}</li>
+    <li>{{entry}}</li>
 <?done?>
+
+<?if env.set?>
+    Set it now
+<?endif?>

@@ -198,8 +198,8 @@ export class Compiler {
     }
 
     public generateSource() {
-        var stack: [{top: boolean, popped: boolean, pushed: boolean, data?: Object}] = [{
-            top: true,
+        var stack: [{first: boolean, popped: boolean, pushed: boolean, data?: Object}] = [{
+            first: true,
             popped: false,
             pushed: false,
             data: {}
@@ -208,7 +208,7 @@ export class Compiler {
             push: function (data: Object = {}) {
                 var frame = stack[stack.length - 1];
                 stack.push({
-                    top: frame.top,
+                    first: frame.first,
                     popped: frame.popped,
                     pushed: true,
                     data
@@ -247,14 +247,12 @@ export class Compiler {
             var instructionSource = instruction.generateSource(stackControl, async);
             var frame = stack[stack.length - 1];
 
-            if (!frame.popped) {
-                if (frame.top)
-                    frame.top = false;
-                else if (async)
-                    source += ",";
-            }
+            if (frame.first)
+                frame.first = false;
+            else if (async && !frame.data['omitcomma'])
+                source += ",";
             if (frame.pushed)
-                frame.top = true;
+                frame.first = true;
 
             if (async) {
                 if (frame.popped) {

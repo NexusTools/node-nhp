@@ -1,0 +1,3 @@
+<?if somethingthatdoesnotexist?>
+    {{somethingthatdoesnotexist}}
+<?endif?>

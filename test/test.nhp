@@ -22,6 +22,12 @@ Relaxing
 <?if false?>
 Sundays
 <?endif?>
+
+<?include "great"?>
+<?include "error"?>
+<?include "iferror"?>
+
+{{jumobo}}
 	
 <?map names "Jeff" 3?>
 <?map names "Date" Date.now()?>
