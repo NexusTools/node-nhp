@@ -5,6 +5,7 @@
         "module": "commonjs",
         "preserveConstEnums": true,
         "moduleResolution": "node",
+        "skipLibCheck": true,
         "declaration": true,
         "sourceMap": true
     },

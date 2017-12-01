@@ -192,7 +192,7 @@ export class Template extends events.EventEmitter {
                             }
 
                             const basename = path.basename(self._filename);
-                            var modifiedSource = "(function " + basename.replace(/\W+/g, "_") + "(vmc, __next) {"
+                            var modifiedSource = "(function tmpl_" + basename.replace(/\W+/g, "_") + "(vmc, __next) {"
                             variables.forEach(function (variable) {
                                 modifiedSource += "const " + variable + " = vmc." + variable + ";";
                             });
