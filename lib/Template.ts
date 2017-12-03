@@ -434,14 +434,18 @@ export class Template extends events.EventEmitter {
                 _cb();
             }
             var template = self._nhp.template(path.resolve(root || self._dirname, file));
-            if (template.isCompiled())
-                template._compiledScript(vmc, cb);
+            const compiledScript = template._compiledScript;
+            if (compiledScript)
+                compiledScript(vmc, cb);
             else {
                 var onCompiled: Function, onError: Function;
                 template.once("compiled", onCompiled = function () {
                     template.removeListener("compiled", onCompiled as any);
                     template.removeListener("error", onError as any);
-                    template._compiledScript(vmc, cb);
+                    if (template._compiledScript)
+                        template._compiledScript(vmc, cb);
+                    else
+                        vmc.__out.write(vmc.__error(new Error("Template compiled emitted, but implementation is missing")));
                 });
                 template.once("error", onError = function (err: Error) {
                     template.removeListener("compiled", onCompiled as any);

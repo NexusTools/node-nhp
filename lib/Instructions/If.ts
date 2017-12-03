@@ -19,7 +19,7 @@ export class If implements Instruction {
 
     generateSource(stackControl: {push: Function, pop: Function}): string {
         stackControl.push();
-        return "if (" + this._condition + ") {";
+        return "try{if(" + this._condition + "){";
     }
 
 }

@@ -8,8 +8,8 @@ export class EndIf implements Instruction {
 
     generateSource(stackControl: StackControl, asyncContext: boolean): string {
         if (stackControl.pop({omitcb:true})['else'] || !asyncContext)
-            return "}";
-        return "}else{__next()}"
+            return "}}catch(e){__out.write(__error(e))}";
+        return "}else{__next()}}catch(e){__out.write(__error(e));__next()}"
     }
 
 }

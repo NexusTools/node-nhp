@@ -16,7 +16,7 @@ export class Exec implements Instruction {
     }
 
     generateSource(): string {
-        return "try{" + this._source + ";}catch(e){__out.write(__error(e));};";
+        return "try{" + this._source + "}catch(e){__out.write(__error(e))}";
     }
 
 }
