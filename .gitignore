@@ -7,5 +7,5 @@
 
 *.bak
 *~
+*.source.js
 /nbproject/private/
-/package-lock.json

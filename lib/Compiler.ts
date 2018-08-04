@@ -2,7 +2,6 @@
 
 import htmlparser2 = require("htmlparser2");
 import log = require("nulllogger");
-import domain = require("domain");
 import stream = require("stream");
 import _ = require("lodash");
 
@@ -117,84 +116,66 @@ export class Compiler {
             self.cancelActive = null;
         }
         var self = this;
-        var d = domain.create();
-        d.run(function () {
-            if (_.isString(source)) {
-                var nsource = new stream.Readable;
-                nsource.push(source);
-                nsource.push(null);
-                source = nsource;
-            } else if (!(source instanceof stream.Readable))
-                throw "Source must be a readable stream or a string";
-            d.add(source);
+        if (_.isString(source)) {
+            var nsource = new stream.Readable;
+            nsource.push(source);
+            nsource.push(null);
+            source = nsource;
+        } else if (!(source instanceof stream.Readable))
+            throw "Source must be a readable stream or a string";
 
-            parser = new htmlparser2.Parser({
-                onopentag: function (name, attribs) {
-                    logger.gears("onopentag", arguments);
-
-                    self._instructions.push(new Echo("<" + name));
-                    for (var key in attribs) {
-                        self._instructions.push(new Echo(" " + key + "=\""));
-                        Compiler.compileText(attribs[key], self, true);
-                        self._instructions.push(new Echo("\""));
-                    }
-                    if (Compiler.isVoidElement(name))
-                        self._instructions.push(new Echo(" />"));
-                    else
-                        self._instructions.push(new Echo(">"));
-                },
-                ontext: function (text) {
-                    logger.gears("ontext", arguments);
-                    Compiler.compileText(text, self);
-                },
-                onclosetag: function (name) {
-                    logger.gears("onclosetag", arguments);
-                    if (!Compiler.isVoidElement(name))
-                        self._instructions.push(new Echo("</" + name + ">"));
-                },
-                onprocessinginstruction: function (name, data) {
-                    try {
-                        logger.gears("onprocessinginstruction", arguments);
-                        if (Compiler.logicRegex.test(data)) {
-                            if (name == data) {
-                                name = name.substring(1, name.length - 1);
-                                data = "";
-                            } else {
-                                data = data.substring(name.length + 1, data.length - 1);
-                                name = name.substring(1);
-                            }
-                            self._instructions.push(self._nhp.processingInstruction(name, data));
-                        } else
-                            self._instructions.push(new Echo("<" + data + ">"));
-                    } catch (e) {
-                        logger.warning(e);
-                        self._instructions.push(new Echo("<error>" + ("" + e).replace("<", "&lt;").replace(">", "&gt;") + "</error>"));
-                    }
-                },
-                oncomment: function (data) {
-                    logger.gears("oncomment", arguments);
-                    self._instructions.push(new Echo("<!--" + data + "-->"));
-                },
-                oncommentend: function () {
-                    logger.gears("oncommentend", arguments);
-                },
-                onerror: function (err) {
-                    logger.gears("onerror", arguments);
-                    callback(err);
-                },
-                onend: function () {
-                    logger.gears("onend", arguments);
-                    callback();
+        parser = new htmlparser2.Parser({
+            onopentag: function (name, attribs) {
+                self._instructions.push(new Echo("<" + name));
+                for (var key in attribs) {
+                    self._instructions.push(new Echo(" " + key + "=\""));
+                    Compiler.compileText(attribs[key], self, true);
+                    self._instructions.push(new Echo("\""));
                 }
-            });
-            d.on("error", function (err: Error) {
-                logger.warning(err);
-                source.unpipe(parser);
+                if (Compiler.isVoidElement(name))
+                    self._instructions.push(new Echo(" />"));
+                else
+                    self._instructions.push(new Echo(">"));
+            },
+            ontext: function (text) {
+                Compiler.compileText(text, self);
+            },
+            onclosetag: function (name) {
+                if (!Compiler.isVoidElement(name))
+                    self._instructions.push(new Echo("</" + name + ">"));
+            },
+            onprocessinginstruction: function (name, data) {
+                try {
+                    if (Compiler.logicRegex.test(data)) {
+                        if (name == data) {
+                            name = name.substring(1, name.length - 1);
+                            data = "";
+                        } else {
+                            data = data.substring(name.length + 1, data.length - 1);
+                            name = name.substring(1);
+                        }
+                        self._instructions.push(self._nhp.processingInstruction(name, data));
+                    } else
+                        self._instructions.push(new Echo("<" + data + ">"));
+                } catch (e) {
+                    logger.warning(e);
+                    self._instructions.push(new Echo("<error>" + ("" + e).replace("<", "&lt;").replace(">", "&gt;") + "</error>"));
+                }
+            },
+            oncomment: function (data) {
+                self._instructions.push(new Echo("<!--" + data + "-->"));
+            },
+            oncommentend: function () {
+            },
+            onerror: function (err) {
                 callback(err);
-            });
-            if (!cancelled)
-                source.pipe(parser);
+            },
+            onend: function () {
+                callback();
+            }
         });
+        if (!cancelled)
+            source.pipe(parser);
     }
 
     public generateSource() {
@@ -238,7 +219,7 @@ export class Compiler {
                 throw e;
             async = true;
         }
-        
+
         if (async)
             source = "__series([";
         else
@@ -246,8 +227,8 @@ export class Compiler {
         this._instructions.forEach(function (instruction: Instruction) {
             var instructionSource = instruction.generateSource(stackControl, async);
             var frame = stack[stack.length - 1];
-                
-                
+
+
             if (async) {
                 if (frame.popped) {
                     source += "], __next)";
@@ -257,12 +238,12 @@ export class Compiler {
                     source += "function(__next){";
                 }
             }
-            
+
             if (frame.first)
                 frame.first = false;
             if (frame.pushed)
                 frame.first = true;
-                
+
             source += instructionSource;
             if (!frame.pushed) {
                 if (async) {
@@ -280,7 +261,7 @@ export class Compiler {
             source += "], __next)";
         else
             source += "__next()}catch(e){__next(e)}";
-            
+
         return source;
     }
 
@@ -303,7 +284,7 @@ export class Compiler {
         if (cBuffer.length > 0)
             optimized.push(new Echo(cBuffer));
         this._instructions = optimized;
-        
+
         if (async) {
             optimized = [];
             var syncStack: Instruction[] = [];
@@ -326,7 +307,7 @@ export class Compiler {
             dumpSyncStack();
             this._instructions = optimized;
         }
-        
+
         callback();
     }
 

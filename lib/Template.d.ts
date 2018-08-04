@@ -7,6 +7,8 @@ export declare class Template extends events.EventEmitter {
     private static $break;
     private _nhp;
     private _source;
+    private _compiledSource;
+    private _compiledVariables;
     private _compiledScript;
     private _dirname;
     private _filename;

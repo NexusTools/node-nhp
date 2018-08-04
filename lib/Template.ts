@@ -13,7 +13,7 @@ import fs = require("fs");
 
 const logger = new log("nhp");
 
-var IGNORED_KEYWORDS = ['JSON', 'Array', 'Date', "abstract", "arguments", "boolean", "break", "byte", "case", "catch", "char", "class", "const", "continue", "debugger", "default", "delete", "do", "double", "else", "enum", "eval", "export", "extends", "false", "final", "finally", "float", "for", "function", "goto", "if", "implements", "import", "in", "instanceof", "int", "interface", "let", "long", "native", "new", "null", "package", "private", "protected", "public", "return", "short", "static", "super", "switch", "synchronized", "this", "throw", "throws", "transient", "true", "try", "typeof", "var", "void", "volatile", "while", "with", "yield", "__next"];
+var IGNORED_KEYWORDS = ['JSON', 'Array', 'Date', "abstract", "arguments", "boolean", "break", "byte", "case", "catch", "char", "class", "const", "continue", "debugger", "default", "delete", "do", "double", "else", "enum", "eval", "export", "extends", "false", "final", "finally", "float", "for", "function", "goto", "if", "implements", "import", "in", "instanceof", "int", "interface", "let", "long", "native", "new", "null", "package", "private", "protected", "public", "return", "short", "static", "super", "switch", "synchronized", "this", "throw", "throws", "transient", "true", "try", "typeof", "var", "void", "volatile", "while", "with", "yield", "__next", "vmc", "env"];
 
 import {NHP} from "./NHP";
 import {Compiler} from "./Compiler";
@@ -44,6 +44,8 @@ export class Template extends events.EventEmitter {
 
     private _nhp: NHP;
     private _source: string;
+    private _compiledSource: string;
+    private _compiledVariables: string[];
     private _compiledScript: (context: any, callback: (err?: Error) => void) => void;
     private _dirname: string;
     private _filename: string;
@@ -58,7 +60,7 @@ export class Template extends events.EventEmitter {
         this._nhp = nhp;
         this._filename = filename;
         this._dirname = path.dirname(filename);
-        
+
         if (mutable) {
             const fswatcher = this._fswatcher = chokidar.watch(this._filename, {
                 awaitWriteFinish: {
@@ -74,10 +76,10 @@ export class Template extends events.EventEmitter {
         });
         this.compile();
     }
-    
+
     /**
      * Render this template and return HTML.
-     * 
+     *
      * @param locals The locals to use for rendering
      * @param cb The callback
      */
@@ -100,7 +102,7 @@ export class Template extends events.EventEmitter {
 
     /**
      * Render this template to a stream.
-     * 
+     *
      * @param locals The locals to use for rendering
      * @param stream The target stream
      * @param cb The callback
@@ -133,7 +135,7 @@ export class Template extends events.EventEmitter {
 
     /**
      * Get the last successfully generated JavaScript source for this template.
-     * 
+     *
      * @returns The source, or undefined if not compiled yet or an error occured.
      */
     public getSource() {
@@ -142,7 +144,7 @@ export class Template extends events.EventEmitter {
 
     /**
      * Check whether this template has been compiled or not.
-     * 
+     *
      * @returns True if compiled, False otherwise.
      */
     public isCompiled() {
@@ -172,10 +174,31 @@ export class Template extends events.EventEmitter {
                             }
 
                             self._source = "" + self._compiler.generateSource();
+                            var ignoredStack = [];
+                            var inCatchOrFunction = false;
+                            var ignored = IGNORED_KEYWORDS.slice(0);
                             var match: any, inquote: any = false, variables: Array<String> = [];
-                            var reg = /(\\?["']|(^|\b)([$A-Z_][0-9A-Z_$]*)(\.[$A-Z_][0-9A-Z_$]*)*(\b|$))/gi;
+                            var reg = /(\\?'|\\?"|}|(^|[{\s;\(]|\n)([$A-Z_][0-9A-Z_$]*)(\b|$)|{)/gi;
                             while (match = reg.exec(self._source)) {
-                                if (inquote) {
+                                if (inCatchOrFunction) {
+                                  const mat = match[3];
+                                  if (/^{/.test(match[0])) {
+                                    inCatchOrFunction = false;
+                                    if (mat)
+                                      if (variables.indexOf(mat) == -1 &&
+                                        ignored.indexOf(mat) == -1)
+                                          variables.push(mat);
+                                  } else if (mat)
+                                    ignored.push(mat);
+                                } else if(/^{/.test(match[0])) {
+                                  ignoredStack.push(ignored.slice(0));
+                                  const mat = match[3];
+                                  if (mat && variables.indexOf(mat) == -1 &&
+                                    ignored.indexOf(mat) == -1)
+                                      variables.push(mat);
+                                } else if(match[0] == "}") {
+                                  ignored = ignoredStack.pop();
+                                } else if (inquote) {
                                     if (match[0] == "\\\"" || match[0] == "\\'")
                                         continue;
                                     if (inquote == match[0])
@@ -184,29 +207,41 @@ export class Template extends events.EventEmitter {
                                         continue;
                                 } else if (match[0] == "\"" || match[0] == "'")
                                     inquote = match[0];
-                                else if (variables.indexOf(match[3]) == -1 &&
-                                    IGNORED_KEYWORDS.indexOf(match[3]) == -1)
-                                    variables.push(match[3]);
-                                else
-                                    continue;
+                                else {
+                                  const mat = match[3];
+                                  if (mat) {
+                                    if (mat == "catch" || mat == "function") {
+                                      ignoredStack.push(ignored.slice(0));
+                                      inCatchOrFunction = true;
+                                    } else {
+                                      if (variables.indexOf(mat) == -1 &&
+                                        ignored.indexOf(mat) == -1)
+                                          variables.push(mat);
+                                    }
+                                  }
+                                }
                             }
 
                             const basename = path.basename(self._filename);
-                            var modifiedSource = "(function tmpl_" + basename.replace(/\W+/g, "_") + "(vmc, __next) {"
+                            var modifiedSource = "(function tmpl_" + basename.replace(/\W+/g, "_") + "(vmc, __next) {const env=vmc.env;"
                             variables.forEach(function (variable) {
-                                modifiedSource += "const " + variable + " = vmc." + variable + ";";
+                                modifiedSource += "const " + variable + "=vmc." + variable + "||env." + variable + ";";
                             });
                             modifiedSource += self._source + "})\n//# sourceURL=" + path.basename(self._filename) + ".js";
-                            self._compiledScript = eval(modifiedSource);
+                            self._compiledScript = eval(self._compiledSource = modifiedSource);
 
                             if (firstTime)
                                 self.emit("compiled");
                             self.emit("updated");
 
                             logger.gears("Compiled", self._filename);
+                            fs.writeFile(self._filename + ".source.js", modifiedSource, function(err) {
+                              if (err)
+                                logger.error(err);
+                            });
                             delete self._compiler
                         } catch (e) {
-                            logger.error("Failed to compile", self._filename, self._source, e);
+                            logger.error("Failed to compile", self._filename, self._compiledSource || self._source, e);
                             self.emit("error", e);
                         }
                     });
@@ -225,7 +260,7 @@ export class Template extends events.EventEmitter {
         }
     }
 
-    
+
     protected run(context: any, out: NodeJS.WritableStream, callback: (err?: Error) => void) {
         if (!this._compiledScript)
             throw new Error("Not compiled yet");
@@ -238,7 +273,7 @@ export class Template extends events.EventEmitter {
             __out: htmlparser2.Parser,
             [key: string]: any
         };
-        
+
 //        if(context && context.cache) {
 //            var cache: string;
 //            if(context.cache === true)
@@ -265,7 +300,7 @@ export class Template extends events.EventEmitter {
 //            }
 //            context.cache == true;
 //        }
-        
+
         vmc = {} as any;
         _.assign(vmc, this._nhp.constants);
         vmc.env = vmc.env || {};
@@ -471,10 +506,10 @@ export class Template extends events.EventEmitter {
             return Template.encodeHTML(data);
         }
         _.assign(vmc, context);
-        
+
         this._compiledScript(vmc, callback);
     }
-    
+
     destroy() {
         if (this._fswatcher)
             this._fswatcher.close();

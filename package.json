@@ -1,19 +1,19 @@
 {
     "name": "nhp",
     "author": "NexusTools",
-    "homepage": "https://www.nexustools.net/projects#nhp",
-    "version": "0.9.0-beta.9",
+    "homepage": "https://www.nexustools.net/projects/node-nhp",
+    "version": "0.9.0-beta.11",
     "licenses": [
         {
             "type": "Apache License 2.0",
             "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
         }
     ],
-    "description": "nhp is a html templating language which uses the moustache syntax, and tags similar to php for methods.",
+    "description": "nhp is a html templating language which uses a variant of the moustache syntax, and tags similar to php for conditions and operations.",
     "keywords": [
         "nhp",
         "html",
-        "nosejs",
+        "nodejs",
         "template",
         "NexusTools",
         "integration",
@@ -39,21 +39,21 @@
         "node": ">=6.0.0"
     },
     "dependencies": {
-        "async": "^2.6.0",
-        "chokidar": "^1.7.0",
+        "async": "^2.6.1",
+        "chokidar": "^2.0.4",
         "htmlparser2": "^3.9.2",
-        "lodash": "^4.17.4",
-        "nulllogger": "^0.5.2"
+        "lodash": "^4.17.10",
+        "nulllogger": "^0.6.0"
     },
     "devDependencies": {
-        "@types/async": "^2.0.45",
-        "@types/chokidar": "^1.7.3",
+        "@types/async": "^2.0.49",
+        "@types/chokidar": "^1.7.5",
         "@types/htmlparser2": "^3.7.31",
-        "@types/lodash": "^4.14.85",
-        "@types/mocha": "^2.2.44",
-        "@types/node": "^8.0.50",
+        "@types/lodash": "^4.14.116",
+        "@types/mocha": "^2.2.48",
+        "@types/node": "^8.10.23",
         "istanbul": "^0.4.5",
-        "mocha": "^3.1.2",
-        "source-map-support": "^0.4.3"
+        "mocha": "^5.2.0",
+        "source-map-support": "^0.5.6"
     }
 }
