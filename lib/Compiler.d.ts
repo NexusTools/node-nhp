@@ -8,7 +8,7 @@ export declare class Compiler {
     private static voidElements;
     static isVoidElement(el: string): boolean;
     constructor(nhp: NHP);
-    private static compileText(text, compiler, attrib?);
+    private static compileText;
     private cancelActive;
     compile(source: any, callback: Function): void;
     generateSource(): string;

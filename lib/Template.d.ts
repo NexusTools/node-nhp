@@ -14,6 +14,7 @@ export declare class Template extends events.EventEmitter {
     private _filename;
     private _compiler;
     private _fswatcher;
+    readonly variables: string[];
     private _cache;
     constructor(filename: string, nhp: NHP, mutable?: boolean);
     /**
@@ -44,7 +45,7 @@ export declare class Template extends events.EventEmitter {
      * @returns True if compiled, False otherwise.
      */
     isCompiled(): boolean;
-    private compile();
+    compile(): void;
     protected run(context: any, out: NodeJS.WritableStream, callback: (err?: Error) => void): void;
     destroy(): void;
 }

@@ -13,28 +13,19 @@ import fs = require("fs");
 
 const logger = new log("nhp");
 
-var IGNORED_KEYWORDS = ['JSON', 'Array', 'Date', "abstract", "arguments", "boolean", "break", "byte", "case", "catch", "char", "class", "const", "continue", "debugger", "default", "delete", "do", "double", "else", "enum", "eval", "export", "extends", "false", "final", "finally", "float", "for", "function", "goto", "if", "implements", "import", "in", "instanceof", "int", "interface", "let", "long", "native", "new", "null", "package", "private", "protected", "public", "return", "short", "static", "super", "switch", "synchronized", "this", "throw", "throws", "transient", "true", "try", "typeof", "var", "void", "volatile", "while", "with", "yield", "__next", "vmc", "env"];
+var IGNORED_KEYWORDS = ['__updateVars', 'JSON', 'Array', 'Date', "abstract", "arguments", "boolean", "break", "byte", "case", "catch", "char", "class", "const", "continue", "debugger", "default", "delete", "do", "double", "else", "enum", "eval", "export", "extends", "false", "final", "finally", "float", "for", "function", "goto", "if", "implements", "import", "in", "instanceof", "int", "interface", "let", "long", "native", "new", "null", "package", "private", "protected", "public", "return", "short", "static", "super", "switch", "synchronized", "this", "throw", "throws", "transient", "true", "try", "typeof", "var", "void", "volatile", "while", "with", "yield", "__next", "vmc", "env"];
 
 import {NHP} from "./NHP";
 import {Compiler} from "./Compiler";
+
+const readSourceFiles = process.env.NHP_READ_SOURCE;
+const writeSourceFiles = process.env.NHP_WRITE_SOURCE;
 
 class BufferedWritable extends Writable {
     buffer = "";
     _write(chunk: any, encoding: string, callback: Function) {
         this.buffer += chunk.toString("utf8");
         callback();
-    }
-}
-class SplitBufferedWritable extends Writable {
-    buffer = "";
-    out: NodeJS.WritableStream;
-    constructor(out: NodeJS.WritableStream) {
-        super();
-        this.out = out;
-    }
-    _write(chunk: any, encoding: string, callback: (err?: Error) => void) {
-        this.buffer += chunk.toString("utf8");
-        this.out.write(chunk, encoding, callback);
     }
 }
 export class Template extends events.EventEmitter {
@@ -51,6 +42,7 @@ export class Template extends events.EventEmitter {
     private _filename: string;
     private _compiler: Compiler;
     private _fswatcher: chokidar.FSWatcher;
+    readonly variables: string[];
     private _cache: {
         [index: string]: string
     } = {};
@@ -151,7 +143,7 @@ export class Template extends events.EventEmitter {
         return !!this._compiledScript;
     }
 
-    private compile() {
+    public compile() {
         try {
             // Stop the active compiler, if any
             this._compiler.cancel();
@@ -159,99 +151,136 @@ export class Template extends events.EventEmitter {
 
         try {
             var self = this;
-            logger.gears("Compiling", this._filename);
-            this._compiler = new Compiler(this._nhp);
-            this._compiler.compile(fs.createReadStream(this._filename), function (err: Error) {
+            const jsfile = self._filename.replace(/\.nhp$/, "") + ".compiled.nhp.js";
+            if (readSourceFiles)
+              fs.readFile(jsfile, "utf8", function(err, source) {
                 try {
-                    if (err) throw err;
-                    var firstTime = !self._compiledScript;
+                  if (err)
+                    throw err;
+                  const data = JSON.parse(source);
+                  (self as any).variables = data.variables;
+                  self._compiledScript = eval(data.source);
+                  self.emit("compiled");
+                  self.emit("updated");
+                } catch (e) {
+                  logger.warning("Failed to optimize", self._filename, e);
+                  if (!self._compiledScript)
+                    self._compiledScript = e;
+                  self.emit("error", e);
+                }
+              });
+            else {
+              logger.gears("Compiling", this._filename);
+              this._compiler = new Compiler(this._nhp);
+              this._compiler.compile(fs.createReadStream(this._filename), function (err: Error) {
+                  try {
+                      if (err) throw err;
+                      var firstTime = !self._compiledScript;
 
-                    self._compiler.optimize(self._nhp.constants, function (err: Error) {
-                        try {
-                            if (err) {
-                                logger.warning(err);
-                                throw new Error("Failed to optimize: " + self._filename + ": " + err);
-                            }
+                      self._compiler.optimize(self._nhp.constants, function (err: Error) {
+                          try {
+                              if (err) {
+                                  logger.warning(err);
+                                  throw new Error("Failed to optimize: " + self._filename + ": " + err);
+                              }
 
-                            self._source = "" + self._compiler.generateSource();
-                            var ignoredStack = [];
-                            var inCatchOrFunction = false;
-                            var ignored = IGNORED_KEYWORDS.slice(0);
-                            var match: any, inquote: any = false, variables: Array<String> = [];
-                            var reg = /(\\?'|\\?"|}|(^|[{\s;\(]|\n)([$A-Z_][0-9A-Z_$]*)(\b|$)|{)/gi;
-                            while (match = reg.exec(self._source)) {
-                                if (inCatchOrFunction) {
-                                  const mat = match[3];
-                                  if (/^{/.test(match[0])) {
-                                    inCatchOrFunction = false;
-                                    if (mat)
-                                      if (variables.indexOf(mat) == -1 &&
-                                        ignored.indexOf(mat) == -1)
-                                          variables.push(mat);
-                                  } else if (mat)
-                                    ignored.push(mat);
-                                } else if(/^{/.test(match[0])) {
-                                  ignoredStack.push(ignored.slice(0));
-                                  const mat = match[3];
-                                  if (mat && variables.indexOf(mat) == -1 &&
-                                    ignored.indexOf(mat) == -1)
-                                      variables.push(mat);
-                                } else if(match[0] == "}") {
-                                  ignored = ignoredStack.pop();
-                                } else if (inquote) {
-                                    if (match[0] == "\\\"" || match[0] == "\\'")
-                                        continue;
-                                    if (inquote == match[0])
-                                        inquote = false;
-                                    else
-                                        continue;
-                                } else if (match[0] == "\"" || match[0] == "'")
-                                    inquote = match[0];
-                                else {
-                                  const mat = match[3];
-                                  if (mat) {
-                                    if (mat == "catch" || mat == "function") {
-                                      ignoredStack.push(ignored.slice(0));
-                                      inCatchOrFunction = true;
-                                    } else {
-                                      if (variables.indexOf(mat) == -1 &&
-                                        ignored.indexOf(mat) == -1)
-                                          variables.push(mat);
+                              self._source = "" + self._compiler.generateSource();
+                              var ignoredStack = [];
+                              var inCatchOrFunction = false;
+                              var ignored = IGNORED_KEYWORDS.slice(0);
+                              var match: any, inquote: any = false, variables: Array<String> = [];
+                              var reg = /(\\?'|\\?"|}|(^|[\[{\s;\(]|\n)([$A-Z_][0-9A-Z_$]*)(\b|$)|{)/gi;
+                              while (match = reg.exec(self._source)) {
+                                  if (inCatchOrFunction) {
+                                    const mat = match[3];
+                                    if (/^{/.test(match[0])) {
+                                      inCatchOrFunction = false;
+                                      if (mat)
+                                        if (variables.indexOf(mat) == -1 &&
+                                          ignored.indexOf(mat) == -1)
+                                            variables.push(mat);
+                                    } else if (mat)
+                                      ignored.push(mat);
+                                  } else if(/^{/.test(match[0])) {
+                                    ignoredStack.push(ignored.slice(0));
+                                    const mat = match[3];
+                                    if (mat && variables.indexOf(mat) == -1 &&
+                                      ignored.indexOf(mat) == -1)
+                                        variables.push(mat);
+                                  } else if(match[0] == "}") {
+                                    ignored = ignoredStack.pop();
+                                  } else if (inquote) {
+                                      if (match[0] == "\\\"" || match[0] == "\\'")
+                                          continue;
+                                      if (inquote == match[0])
+                                          inquote = false;
+                                      else
+                                          continue;
+                                  } else if (match[0] == "\"" || match[0] == "'")
+                                      inquote = match[0];
+                                  else {
+                                    const mat = match[3];
+                                    if (mat) {
+                                      if (mat == "catch" || mat == "function") {
+                                        ignoredStack.push(ignored.slice(0));
+                                        inCatchOrFunction = true;
+                                      } else {
+                                        if (variables.indexOf(mat) == -1 &&
+                                          ignored.indexOf(mat) == -1)
+                                            variables.push(mat);
+                                      }
                                     }
                                   }
-                                }
-                            }
+                              }
 
-                            const basename = path.basename(self._filename);
-                            var modifiedSource = "(function tmpl_" + basename.replace(/\W+/g, "_") + "(vmc, __next) {const env=vmc.env;"
-                            variables.forEach(function (variable) {
-                                modifiedSource += "const " + variable + "=vmc." + variable + "||env." + variable + ";";
-                            });
-                            modifiedSource += self._source + "})\n//# sourceURL=" + path.basename(self._filename) + ".js";
-                            self._compiledScript = eval(self._compiledSource = modifiedSource);
+                              var first = 1;
+                              const basename = path.basename(self._filename);
+                              var modifiedSource = "(function tmpl_" + basename.replace(/\W+/g, "_") + "(vmc, __next) {const env=vmc.env;var ";
+                              variables.forEach(function (variable) {
+                                if (first)
+                                  first = 0;
+                                else
+                                  modifiedSource += ", ";
+                                modifiedSource += variable;
+                              });
+                              first = 1;
+                              modifiedSource += ";const __updateVars = function() {";
+                              variables.forEach(function (variable) {
+                                if (first)
+                                  first = 0;
+                                else
+                                  modifiedSource += ";";
+                                modifiedSource += variable + "=" + JSON.stringify(variable) + " in vmc?vmc." + variable + " : env." + variable;
+                              });
+                              modifiedSource += "};__updateVars();";
+                              modifiedSource += self._source + "})\n//# sourceURL=" + path.basename(self._filename) + ".js";
+                              self._compiledScript = eval(self._compiledSource = modifiedSource);
+                              (self as any).variables = variables;
 
-                            if (firstTime)
-                                self.emit("compiled");
-                            self.emit("updated");
+                              if (firstTime)
+                                  self.emit("compiled");
+                              self.emit("updated");
 
-                            logger.gears("Compiled", self._filename);
-                            fs.writeFile(self._filename + ".source.js", modifiedSource, function(err) {
-                              if (err)
-                                logger.error(err);
-                            });
-                            delete self._compiler
-                        } catch (e) {
-                            logger.error("Failed to compile", self._filename, self._compiledSource || self._source, e);
-                            self.emit("error", e);
-                        }
-                    });
-                } catch (e) {
-                    logger.warning("Failed to optimize", self._filename, e);
-                    if (!self._compiledScript)
-                        self._compiledScript = e;
-                    self.emit("error", e);
-                }
-            });
+                              logger.gears("Compiled", self._filename);
+                              if (writeSourceFiles)
+                                fs.writeFile(jsfile, JSON.stringify({variables,source:modifiedSource}), function(err) {
+                                  if (err)
+                                    logger.warning(err);
+                                });
+                              delete self._compiler
+                          } catch (e) {
+                              logger.error("Failed to compile", self._filename, self._compiledSource || self._source, e);
+                              self.emit("error", e);
+                          }
+                      });
+                  } catch (e) {
+                      logger.warning("Failed to optimize", self._filename, e);
+                      if (!self._compiledScript)
+                          self._compiledScript = e;
+                      self.emit("error", e);
+                  }
+              });
+            }
         } catch (e) {
             logger.warning("Failed to compile", self._filename, e);
             if (!self._compiledScript)
