@@ -189,7 +189,7 @@ export class Template extends events.EventEmitter {
                               var inCatchOrFunction = false;
                               var ignored = IGNORED_KEYWORDS.slice(0);
                               var match: any, inquote: any = false, variables: Array<String> = [];
-                              var reg = /(\\?'|\\?"|}|(^|[\[{\s;\(]|\n)([$A-Z_][0-9A-Z_$]*)(\b|$)|{)/gi;
+                              var reg = /(\\?'|\\?"|}|(^|[\^~\/\%\=\<\>\|\&\!+\-\[{\s;\(]|\n)([$A-Z_][0-9A-Z_$]*)(\b|$)|{)/gi;
                               while (match = reg.exec(self._source)) {
                                   if (inCatchOrFunction) {
                                     const mat = match[3];

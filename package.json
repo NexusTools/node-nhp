@@ -2,7 +2,7 @@
     "name": "nhp",
     "author": "NexusTools",
     "homepage": "https://www.nexustools.net/projects/node-nhp",
-    "version": "0.9.0-beta.11",
+    "version": "0.9.0-beta.13",
     "licenses": [
         {
             "type": "Apache License 2.0",
@@ -51,7 +51,7 @@
         "@types/htmlparser2": "^3.7.31",
         "@types/lodash": "^4.14.116",
         "@types/mocha": "^2.2.48",
-        "@types/node": "^8.10.23",
+        "@types/node": "^8.10.24",
         "istanbul": "^0.4.5",
         "mocha": "^5.2.0",
         "source-map-support": "^0.5.6"
